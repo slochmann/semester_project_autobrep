@@ -100,12 +100,14 @@ def main():
             geom_tokens = None
             if MMTokenIndex.BOGEOM.value in sample:
                 geom_s = np.where(sample==MMTokenIndex.BOGEOM.value)[0][0]
-                geom_e = np.where(sample==MMTokenIndex.EOGEOM.value)[0][0]
+                geom_e_matches = np.where(sample==MMTokenIndex.EOGEOM.value)[0]
+                geom_e = geom_e_matches[0] if len(geom_e_matches) > 0 else len(sample)
                 geom_tokens = sample[geom_s+1:geom_e]
 
             if MMTokenIndex.BOC.value in sample:
                 cad_s = np.where(sample==MMTokenIndex.BOC.value)[0][0]
-                cad_e = np.where(sample==MMTokenIndex.EOC.value)[0][0]
+                cad_e_matches = np.where(sample==MMTokenIndex.EOC.value)[0]
+                cad_e = cad_e_matches[0] if len(cad_e_matches) > 0 else len(sample)
                 cad_tokens = sample[cad_s+1:cad_e]
 
                 if geom_tokens is not None:
