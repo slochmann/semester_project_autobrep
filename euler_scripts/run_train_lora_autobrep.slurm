@@ -1,15 +1,15 @@
 #!/bin/bash
-#SBATCH --job-name=autobrep_lora_inference
-#SBATCH --time=01:00:00
+#SBATCH --job-name=autobrep_lora_train
+#SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G                   # Total 32G
 #SBATCH --gpus=rtx_4090:1
-#SBATCH --output=/cluster/scratch/slochmann/logs/autobrep_lora_inference_%j.out
-#SBATCH --error=/cluster/scratch/slochmann/logs/autobrep_lora_inference_%j.err
+#SBATCH --output=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.out
+#SBATCH --error=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.err
 
 mkdir -p "$SCRATCH/logs"
-mkdir -p "$SCRATCH/AutoBrep/lora_samples"
+mkdir -p "$SCRATCH/AutoBrep/checkpoints/furniture-lora-adapter"
 
 #------------------------------------------------------------------------------
 # Load modules
@@ -34,42 +34,28 @@ unset PYTHONPATH
 #------------------------------------------------------------------------------
 AUTOBREP_DIR="$SCRATCH/AutoBrep"
 CKPT_DIR="$SCRATCH/AutoBrep/checkpoints"
-OUTPUT_DIR="$SCRATCH/AutoBrep/lora_samples"
+DATASET_PATH="$SCRATCH/AutoBrep/data/parquet"
+OUTPUT_DIR="$CKPT_DIR/furniture-lora-adapter"
 
-# Script and adapter path definitions
-# By default we map the repo to scratch on Euler; if running this from the repository directly mapped to Euler:
-LORA_ADAPTER_PATH="$HOME/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/LoRA finetuning/model/furniture-lora-adapter"
-SCRIPT_PATH="$HOME/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/euler inference/sample_lora_ar.py"
+SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/train_lora_ar.py"
 
-# Verify checkpoints exist
 if [ ! -f "$CKPT_DIR/ar.ckpt" ]; then
     echo "ERROR: Base checkpoints not found at $CKPT_DIR"
     exit 1
 fi
 
-if [ ! -d "$LORA_ADAPTER_PATH" ]; then
-    echo "ERROR: LoRA adapter not found at $LORA_ADAPTER_PATH"
-    echo "Please ensure the adapter was copied to this location."
-    exit 1
-fi
-
-#------------------------------------------------------------------------------
-# Run inference from core/ (required for autobrep package import)
-#------------------------------------------------------------------------------
 cd "$AUTOBREP_DIR/core" || { echo "ERROR: Could not cd into $AUTOBREP_DIR/core"; exit 1; }
 
-echo "Starting LoRA Inference Headless Generation..."
+echo "Starting LoRA Fine-Tuning..."
 "$PYTHON" "$SCRIPT_PATH" \
     --ckpt_dir "$CKPT_DIR" \
-    --lora_adapter_path "$LORA_ADAPTER_PATH" \
+    --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
-    --num_samples 10 \
-    --temperature 1.0 \
-    --threshold 0.95 \
-    --complexity 17 \
-    --batch_size 10
+    --batch_size 4 \
+    --num_epochs 100 \
+    --learning_rate 1e-4
 
 echo "================================================================"
-echo " LoRA Inference complete!"
-echo " Samples saved to: $OUTPUT_DIR"
+echo " LoRA Training complete!"
+echo " Adapter saved to: $OUTPUT_DIR"
 echo "================================================================"
