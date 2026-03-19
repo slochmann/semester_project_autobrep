@@ -66,8 +66,8 @@ echo "Starting LoRA Inference Headless Generation..."
     --num_samples 10 \
     --temperature 1.0 \
     --threshold 0.95 \
-    --complexity 15 \
-    --batch_size 4
+    --complexity 17 \
+    --batch_size 10
 
 echo "================================================================"
 echo " LoRA Inference complete!"
