@@ -27,12 +27,24 @@ def parse_args():
     parser.add_argument(
         "--output_dir", type=str, required=True, help="Path to save the LoRA adapter"
     )
-    parser.add_argument("--batch_size", type=int, default=4, help="Training batch size")
+    parser.add_argument("--batch_size", type=int, default=2, help="Training batch size")
     parser.add_argument(
         "--num_epochs", type=int, default=5, help="Number of epochs to train"
     )
     parser.add_argument(
         "--learning_rate", type=float, default=1e-4, help="Learning rate for AdamW"
+    )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=0,
+        help="Number of dataloader workers (0=disabled for memory efficiency)",
+    )
+    parser.add_argument(
+        "--prefetch_factor",
+        type=int,
+        default=1,
+        help="Prefetch factor for dataloader (reduce if OOM)",
     )
 
     # Weights & Biases tracking
@@ -114,6 +126,10 @@ def train_lora(
             num_batches += 1
             loss_history.append(loss.item())
 
+            # Clean up GPU cache to avoid memory fragmentation
+            if batch_idx % 10 == 0:
+                torch.cuda.empty_cache()
+
             if (batch_idx + 1) % 5 == 0:
                 avg_loss = epoch_loss / num_batches
                 lr = optimizer.param_groups[0]["lr"]
@@ -126,14 +142,14 @@ def train_lora(
                 gpu_mem_max = torch.cuda.max_memory_allocated(device) / (1024**3)  # GB
 
                 print(
-                    f"Epoch {epoch + 1}/{num_epochs} | Batch {batch_idx + 1}/{len(dataloader)} | "
+                    f"Epoch {epoch + 1}/{num_epochs} | Batch {batch_idx + 1} | "
                     f"Loss: {avg_loss:.4f} | LR: {lr:.2e} | "
                     f"GPU Mem: {gpu_mem_allocated:.2f}GB / {gpu_mem_reserved:.2f}GB (Max: {gpu_mem_max:.2f}GB)"
                 )
 
                 # Log to wandb
                 if wandb_run is not None:
-                    batches_done = epoch * len(dataloader) + (batch_idx + 1)
+                    batches_done = epoch * (batch_idx + 1) + (batch_idx + 1)
                     wandb.log(
                         {
                             "loss": avg_loss,
@@ -225,10 +241,10 @@ def main():
         load_meta=True,
         uv_invariant=True,
         batch_size=args.batch_size,
-        num_workers=4,
+        num_workers=args.num_workers,  # 0 for single-process loading (memory safe)
         drop_last=True,
-        pin_memory=True,
-        persistent_workers=True,
+        pin_memory=(args.num_workers > 0),  # Only pin if using workers
+        persistent_workers=(args.num_workers > 0),  # Only persist if using workers
     )
     data_module.setup(stage="fit")
     train_dataloader = data_module.train_dataloader()

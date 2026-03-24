@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=autobrep_lora_train
+#SBATCH --job-name=40_cylinders
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -8,7 +8,8 @@
 #SBATCH --output=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.out
 #SBATCH --error=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.err
 
-NAME='3_cylinders'
+# Use SLURM job name; override with sbatch --job-name=autobrep_lora_train_<descriptor>
+NAME="${SLURM_JOB_NAME}"
 mkdir -p "$SCRATCH/logs"
 mkdir -p "$SCRATCH/datasets"
 mkdir -p "$SCRATCH/models"
@@ -73,9 +74,10 @@ echo "Starting LoRA Fine-Tuning..."
     --ckpt_dir "$CKPT_DIR" \
     --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
-    --batch_size 4 \
+    --batch_size 2 \
     --num_epochs 100 \
     --learning_rate 1e-4 \
+    --num_workers 0 \
     --track True \
     --wandb_project "lora-autobrep" \
     --wandb_entity "slochmann-ethz"
