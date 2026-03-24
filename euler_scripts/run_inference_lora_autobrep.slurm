@@ -39,7 +39,7 @@ OUTPUT_DIR="$SCRATCH/AutoBrep/lora_samples"
 # Script and adapter path definitions
 # By default we map the repo to scratch on Euler; if running this from the repository directly mapped to Euler:
 LORA_ADAPTER_PATH="$CKPT_DIR/furniture-lora-adapter"
-SCRIPT_PATH="$HOME/semester_project_euler/euler_inference/sample_lora_ar.py"
+SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/sample_lora_ar.py"
 
 # Verify checkpoints exist
 if [ ! -f "$CKPT_DIR/ar.ckpt" ]; then
@@ -66,9 +66,9 @@ echo "Starting LoRA Inference Headless Generation..."
     --num_samples 10 \
     --temperature 1.0 \
     --threshold 0.95 \
-    --complexity 17 \
+    --complexity 16 \
     --batch_size 10
-
+# complexity: 14=easy, 15=medium, 16=hard, 17=random/uncond
 echo "================================================================"
 echo " LoRA Inference complete!"
 echo " Samples saved to: $OUTPUT_DIR"
