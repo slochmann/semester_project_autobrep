@@ -8,8 +8,11 @@
 #SBATCH --output=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.out
 #SBATCH --error=/cluster/scratch/slochmann/logs/autobrep_lora_train_%j.err
 
+NAME='3_cylinders'
 mkdir -p "$SCRATCH/logs"
-mkdir -p "$SCRATCH/AutoBrep/checkpoints/furniture-lora-adapter"
+mkdir -p "$SCRATCH/datasets"
+mkdir -p "$SCRATCH/models"
+mkdir -p "$SCRATCH/AutoBrep/checkpoints/$NAME"
 
 #------------------------------------------------------------------------------
 # Load modules
@@ -30,12 +33,31 @@ PYTHON="$CONDA_DIR/envs/autobrep/bin/python"
 unset PYTHONPATH
 
 #------------------------------------------------------------------------------
+# Set PyTorch environment variables
+#------------------------------------------------------------------------------
+export PYTORCH_ALLOC_CONF=expandable_segments:True
+
+#------------------------------------------------------------------------------
+# Set WANDB environment variables
+#------------------------------------------------------------------------------
+export WANDB_API_KEY="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"
+export WANDB_PROJECT="autobrep"
+export WANDB_ENTITY="slochmann-ethz"
+
+#------------------------------------------------------------------------------
+# Set Hugging Face environment variables
+#------------------------------------------------------------------------------
+export HF_HOME="$SCRATCH/models"
+export HF_DATASETS_CACHE="$SCRATCH/datasets"
+export HF_TOKEN="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"
+
+#------------------------------------------------------------------------------
 # Paths
 #------------------------------------------------------------------------------
 AUTOBREP_DIR="$SCRATCH/AutoBrep"
 CKPT_DIR="$SCRATCH/AutoBrep/checkpoints"
 DATASET_PATH="$SCRATCH/AutoBrep/data/parquet"
-OUTPUT_DIR="$CKPT_DIR/furniture-lora-adapter"
+OUTPUT_DIR="$CKPT_DIR/$NAME"
 
 SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/train_lora_ar.py"
 
@@ -53,7 +75,10 @@ echo "Starting LoRA Fine-Tuning..."
     --output_dir "$OUTPUT_DIR" \
     --batch_size 4 \
     --num_epochs 100 \
-    --learning_rate 1e-4
+    --learning_rate 1e-4 \
+    --track True \
+    --wandb_project "lora-autobrep" \
+    --wandb_entity "slochmann-ethz"
 
 echo "================================================================"
 echo " LoRA Training complete!"

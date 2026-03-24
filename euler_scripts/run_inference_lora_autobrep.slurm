@@ -63,7 +63,7 @@ echo "Starting LoRA Inference Headless Generation..."
     --ckpt_dir "$CKPT_DIR" \
     --lora_adapter_path "$LORA_ADAPTER_PATH" \
     --output_dir "$OUTPUT_DIR" \
-    --num_samples 10 \
+    --num_samples 100 \
     --temperature 1.0 \
     --threshold 0.95 \
     --complexity 16 \

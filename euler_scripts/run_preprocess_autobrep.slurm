@@ -28,8 +28,9 @@ unset PYTHONPATH
 #------------------------------------------------------------------------------
 # Paths
 #------------------------------------------------------------------------------
-INPUT_DIR="$SCRATCH/AutoBrep/data/step"
-OUTPUT_FILE="$SCRATCH/AutoBrep/data/parquet/train/data_original.parquet"
+NAME='3_cylinders'
+INPUT_DIR="$SCRATCH/AutoBrep/data/step/$NAME"
+OUTPUT_FILE="$SCRATCH/AutoBrep/data/parquet/train/$NAME.parquet"
 
 SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/preprocess_step_to_parquet.py"
 
