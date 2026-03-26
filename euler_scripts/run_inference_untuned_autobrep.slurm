@@ -38,7 +38,7 @@ unset PYTHONPATH
 AUTOBREP_DIR="$SCRATCH/AutoBrep"
 CKPT_DIR="$SCRATCH/AutoBrep/checkpoints"
 SAMPLE_CONFIG="$AUTOBREP_DIR/configs/sample.json"
-OUTPUT_DIR="$SCRATCH/AutoBrep/samples"
+OUTPUT_DIR="$SCRATCH/AutoBrep/samples/easy_untuned"
 
 # Verify checkpoints exist
 if [ ! -f "$CKPT_DIR/ar.ckpt" ]; then

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=40_cylinders
+#SBATCH --job-name=100_cylinders
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -74,11 +74,11 @@ echo "Starting LoRA Fine-Tuning..."
     --ckpt_dir "$CKPT_DIR" \
     --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
-    --batch_size 2 \
-    --num_epochs 100 \
+    --batch_size 4 \
+    --num_epochs 50 \
     --learning_rate 1e-4 \
-    --num_workers 0 \
-    --track True \
+    --lora_r 8 \
+    --lora_alpha 32 \
     --wandb_project "lora-autobrep" \
     --wandb_entity "slochmann-ethz"
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=autobrep_preprocess
+#SBATCH --job-name=100_cylinders
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -28,7 +28,7 @@ unset PYTHONPATH
 #------------------------------------------------------------------------------
 # Paths
 #------------------------------------------------------------------------------
-NAME='3_cylinders'
+NAME="${SLURM_JOB_NAME}"
 INPUT_DIR="$SCRATCH/AutoBrep/data/step/$NAME"
 OUTPUT_FILE="$SCRATCH/AutoBrep/data/parquet/train/$NAME.parquet"
 

@@ -1,5 +1,5 @@
 import argparse
-import time
+import os
 from pathlib import Path
 
 import torch
@@ -8,6 +8,9 @@ import wandb
 from autobrep.data.abc_data import ARDataModule
 from autobrep.models.autoregressive import AutoBrepModel
 from peft import LoraConfig, get_peft_model
+
+# Get SLURM job name (or None if not running under SLURM)
+job_name = os.environ.get("SLURM_JOB_NAME", "local_run")
 
 
 def parse_args():
@@ -45,6 +48,20 @@ def parse_args():
         type=int,
         default=1,
         help="Prefetch factor for dataloader (reduce if OOM)",
+    )
+
+    # LoRA configuration
+    parser.add_argument(
+        "--lora_r",
+        type=int,
+        default=8,
+        help="LoRA rank (r parameter)",
+    )
+    parser.add_argument(
+        "--lora_alpha",
+        type=int,
+        default=32,
+        help="LoRA alpha (scaling factor)",
     )
 
     # Weights & Biases tracking
@@ -134,31 +151,17 @@ def train_lora(
                 avg_loss = epoch_loss / num_batches
                 lr = optimizer.param_groups[0]["lr"]
 
-                # GPU memory metrics
-                gpu_mem_allocated = torch.cuda.memory_allocated(device) / (
-                    1024**3
-                )  # GB
-                gpu_mem_reserved = torch.cuda.memory_reserved(device) / (1024**3)  # GB
-                gpu_mem_max = torch.cuda.max_memory_allocated(device) / (1024**3)  # GB
-
                 print(
                     f"Epoch {epoch + 1}/{num_epochs} | Batch {batch_idx + 1} | "
-                    f"Loss: {avg_loss:.4f} | LR: {lr:.2e} | "
-                    f"GPU Mem: {gpu_mem_allocated:.2f}GB / {gpu_mem_reserved:.2f}GB (Max: {gpu_mem_max:.2f}GB)"
+                    f"Loss: {avg_loss:.4f} | LR: {lr:.2e}"
                 )
 
                 # Log to wandb
                 if wandb_run is not None:
-                    batches_done = epoch * (batch_idx + 1) + (batch_idx + 1)
                     wandb.log(
                         {
                             "loss": avg_loss,
                             "learning_rate": lr,
-                            "gpu_memory_allocated_gb": gpu_mem_allocated,
-                            "gpu_memory_reserved_gb": gpu_mem_reserved,
-                            "gpu_memory_max_gb": gpu_mem_max,
-                            "epoch": epoch + 1,
-                            "batch": batches_done,
                         }
                     )
 
@@ -172,7 +175,6 @@ def train_lora(
             wandb.log(
                 {
                     "epoch_loss": avg_epoch_loss,
-                    "epoch": epoch + 1,
                 }
             )
 
@@ -192,7 +194,7 @@ def main():
     torch.manual_seed(args.seed)
 
     # Initialize wandb
-    run_name = f"lora_ar__{args.seed}__{int(time.time())}"
+    run_name = f"{job_name}"
     if args.track:
         wandb.init(
             project=args.wandb_project,
@@ -217,10 +219,10 @@ def main():
     model.to(device).eval()
 
     # 2. Configure LoRA
-    print("Configuring LoRA...")
+    print(f"Configuring LoRA... (r={args.lora_r}, alpha={args.lora_alpha})")
     lora_config = LoraConfig(
-        r=4,
-        lora_alpha=16,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
         target_modules=["to_q", "to_v"],
         lora_dropout=0.1,
         bias="none",
