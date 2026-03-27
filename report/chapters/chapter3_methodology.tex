@@ -1,0 +1,153 @@
+\section{Methodology}
+\label{chap:methodology}
+
+%===============================================================
+\subsection{AutoBrep Model Architecture}
+%===============================================================
+
+The AutoBrep model is built on a transformer-based decoder architecture designed specifically for B-Rep generation. The model operates on a discrete token sequence representation of CAD geometry, enabling efficient parallel processing during training.
+
+\par
+
+\textbf{Key architectural components:}
+\begin{itemize}
+	\item \textbf{Tokenization Layer}: Converts continuous B-Rep geometry (UV-grids, bounding boxes) into discrete tokens
+	\item \textbf{Transformer Decoder}: Multi-head self-attention and feed-forward layers
+	\item \textbf{Position Embeddings}: Captures sequential dependencies in geometry
+	\item \textbf{Vocabulary}: A learned codebook of geometric primitives
+\end{itemize}
+
+The model is pre-trained on a large corpus of CAD models and exhibits strong zero-shot generation capabilities. Inference proceeds autoregressively, generating one token at a time conditioned on previously generated tokens and any conditioning signals (e.g., complexity level, sketch inputs).
+
+%===============================================================
+\subsection{Low-Rank Adaptation (LoRA) Fine-tuning}
+%===============================================================
+
+To adapt the AutoBrep model---a decoder-only Transformer for autoregressive B-Rep generation---using LoRA, adapters are strategically inserted into the query and value projection matrices within each transformer layer. The model's input and output structure defines the dimensions for these insertions.
+
+\par
+
+\textbf{Input/Output Dimensions and Projection:}
+
+The AutoBrep model processes token sequences where each token's embedding has dimension $d_{\text{in}} = 768$. In each attention layer, linear projections operate as follows:
+\[
+\begin{array}{rcl}
+\text{Input sequence:} & [\text{batch}, \text{seq\_len}, \mathbf{768}] & \leftarrow d_{\text{in}} \text{ (embedding dim)} \\
+& \downarrow & \\
+\text{Projection:} & \text{to\_q, to\_v}: \mathbb{R}^{768} \to \mathbb{R}^{768} & \leftarrow \text{Linear: } \mathbf{W} \in \mathbb{R}^{768 \times 768} \\
+& \downarrow & \\
+\text{Output:} & [\text{batch}, \text{seq\_len}, \mathbf{768}] & \leftarrow d_{\text{out}} \text{ (projection output dim)}
+\end{array}
+\]
+
+\par
+
+\textbf{LoRA Adapter Insertion Points:}
+
+Adapters are inserted in parallel to the frozen, pre-trained weights of the Query (\texttt{to\_q}) and Value (\texttt{to\_v}) projection modules within each of the 35 transformer layers:
+\[
+\begin{array}{ll}
+\text{Original:} & \mathbf{z}_q = \mathbf{W}_q \mathbf{x} \\
+\text{With LoRA:} & \mathbf{z}_q = \underbrace{\mathbf{W}_q \mathbf{x}}_{\text{frozen}} + \underbrace{\mathbf{B} \mathbf{A} \mathbf{x}}_{\text{adapter}} \\
+\text{where:} & \mathbf{A} \in \mathbb{R}^{r \times 768},\ \mathbf{B} \in \mathbb{R}^{768 \times r},\ r \ll 768
+\end{array}
+\]
+
+\par
+
+\textbf{Configuration Parameters:}
+\begin{itemize}
+	\item \textbf{LoRA Rank} ($r$): Controls capacity--memory tradeoff; typical values $r \in \{4, 8, 16\}$
+	\item \textbf{LoRA Alpha} ($\alpha$): Scaling factor for adapter output; effective scale $= \alpha/r$
+	\item \textbf{Target Layers}: Applied to query and value projection layers only (not key or output projections)
+	\item \textbf{Number of Layers}: 35 transformer layers, 2 adapter modules per layer (to\_q and to\_v)
+\end{itemize}
+
+\par
+
+\textbf{Parameter Efficiency Analysis:}
+
+With rank $r=4$, each adapter pair $(\mathbf{A}, \mathbf{B})$ adds $4 \times 768 + 768 \times 4 = 6,144$ trainable parameters. Across 35 layers and 2 modules per layer:
+
+\[
+\text{Total trainable params} = 35 \times 2 \times 6,144 = \mathbf{430,080} \text{ parameters}
+\]
+
+This represents only $\sim$0.001\% of the total model size ($\sim$435 million parameters in AutoBrep). In contrast, the full \texttt{to\_q} and \texttt{to\_v} projections contain $2 \times 35 \times 768^2 \approx 41.9$ million parameters, demonstrating the dramatic parameter efficiency of LoRA fine-tuning.
+
+%===============================================================
+\subsection{Data Preparation Pipeline}
+%===============================================================
+
+A custom data processing pipeline converts raw STEP files (CAD file format) into a structured parquet dataset compatible with AutoBrep tokenization:
+
+\par
+
+\textbf{Processing steps:}
+\begin{enumerate}
+	\item \textbf{STEP Loading}: Parse CAD solids using Open Cascade (occwl.io)
+	\item \textbf{Feature Extraction}: Extract faces, edges, UV-grids, and bounding boxes
+	\item \textbf{Geometry Normalization}: Normalize coordinates to the $[-1, 1]$ range
+	\item \textbf{Serialization}: Convert numpy arrays to bytes for compact storage
+	\item \textbf{Parquet Export}: Write train/validation splits to disk
+\end{enumerate}
+
+The resulting parquet dataset contains serialized geometry tensors (faces: $\approx 12 \times 10 \times 10 \times 3$ points, edges: $\approx 23 \times 10 \times 3$ points) with corresponding bounding box annotations and topology metadata.
+
+%===============================================================
+\subsection{Training Setup}
+%===============================================================
+
+Fine-tuning is performed using the AdamW optimizer on the frozen base model with LoRA adapters as the only trainable parameters.
+
+\par
+
+\textbf{Hyperparameters:}
+\begin{table}[h!]
+	\centering
+	\caption{Training Hyperparameters}
+	\label{tab:training_hyperparams}
+	\small
+	\begin{tabularx}{\textwidth}{@{}l X l@{}}
+		\toprule
+		\textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
+		\midrule
+		Batch Size & 4 & Constrained by GPU memory; adjust lower for larger models \\
+		Number of Epochs & 50 & Early stopping may be applied based on validation loss \\
+		Learning Rate & 1e-4--5e-5 & Lower rates recommended for small datasets to prevent overfitting \\
+		LoRA Rank & 8--16 & Balance between model capacity and parameter efficiency \\
+		LoRA Alpha & 32 & Effective scaling = $\alpha / r$; adjust for sensitivity \\
+		Optimizer & AdamW & Standard choice with weight decay for regularization \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+Training is monitored via Weights \& Biases (W\&B) for real-time loss tracking, learning rate schedules, and system metrics. Convergence is typically achieved when training loss plateaus (typical range: 0.8--1.0).
+
+%===============================================================
+\subsection{Inference and B-Rep Generation}
+%===============================================================
+
+During inference, the fine-tuned model generates B-Rep sequences autoregressively, conditioned on a complexity token and optional text/sketch inputs. The generation process is controlled via temperature sampling and top-$p$ (nucleus) sampling:
+
+\par
+
+\textbf{Sampling strategy:}
+\begin{align}
+p_{\text{sampled}} &= \text{top\_p}(p_{\text{model}}, \text{threshold}=0.95) \\
+\text{token} &\sim \text{Categorical}(p_{\text{sampled}} / T)
+\end{align}
+
+where $T$ is the temperature parameter (lower $T$ yields more confident/deterministic outputs).
+
+\par
+
+\textbf{Inference parameters:}
+\begin{itemize}
+	\item \textbf{Number of Samples}: How many B-Reps to generate ($N \geq 10$ recommended)
+	\item \textbf{Complexity Token}: Controls model's generation preference (14=simple, 17=random)
+	\item \textbf{Temperature}: Sampling diversity control ($0.5$--$1.0$ typical)
+	\item \textbf{Top-$p$ Threshold}: Nucleus sampling parameter ($0.90$--$0.95$ typical)
+\end{itemize}
+
+Generated sequences are converted back to CAD-compatible formats (e.g., STEP files) for evaluation and visualization.

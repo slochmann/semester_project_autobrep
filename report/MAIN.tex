@@ -1,0 +1,157 @@
+% This is a simple report or thesis template for the Chair of Planning of Landscape and Urban Systems at ETH Zurich,
+% created by Noel Treffinger (ntreffinger@ethz.ch) on 14.12.2024
+
+\documentclass[12pt,a4paper]{article}
+% \documentclass defines the type of document to be created.
+% 'article' is suitable for shorter documents like articles, reports, and theses.
+% Options:
+%   - 12pt: Sets the base font size to 12 points.
+%   - a4paper: Sets the paper size to A4.
+
+% ===============================================================
+% Load Custom Style Package
+% ===============================================================
+\usepackage{plusstyle}
+% This custom package ('plusstyle.sty') includes additional styling, formatting, and configuration settings
+% specific to the Chair of Planning of Landscape and Urban Systems at ETH Zurich.
+% It helps maintain consistent formatting across documents.
+
+% ===============================================================
+% Load BibLaTeX for Bibliography Management
+% ===============================================================
+\usepackage[
+  backend=biber,           % Specifies 'biber' as the backend for processing the bibliography.
+  style=authoryear,        % Uses the author-year citation style.
+  maxcitenames=1,          % Limits citations to display only the first author's name before 'et al.'.
+  uniquelist=false,        % Prevents adding extra letters to repeated author lists in the bibliography.
+  dashed=false,            % Disables the use of dashed lines for repeated author names.
+  labelalpha               % Uses an alphanumeric label for citations (e.g., [ABC20]).
+]{biblatex}
+% BibLaTeX offers advanced bibliography management with extensive customization options.
+
+\setlength{\bibitemsep}{0.3em}
+% Sets the vertical space between items in the bibliography to 0.3em for improved readability.
+
+\renewcommand{\cite}{\textcite}
+% Redefines the \cite command to \textcite, which formats citations as textual references.
+% Example: "Smith (2020)" instead of "(Smith, 2020)".
+
+\addbibresource{bib/references.bib}
+% Specifies the bibliography file 'references.bib' located in the 'bib' directory.
+% This file should contain all your reference entries in BibTeX format.
+
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
+% Adjusts the penalties for breaking URLs in the bibliography.
+% Higher values reduce the likelihood of breaking URLs at certain points, enhancing URL display.
+
+%===========================================================================
+% The preamble ends here. The main document starts after \begin{document}.
+%===========================================================================
+
+\begin{document}
+
+    % Title Page
+    \input{titlepage}
+    % Inserts the content of 'titlepage.tex' here, which should define the layout and information for the title page.
+
+    % Roman Page Numbering for Front Matter
+    \pagenumbering{roman}
+    % Changes page numbering to lowercase Roman numerals (i, ii, iii, ...), typically used for front matter.
+
+    \setcounter{page}{1}
+    % Sets the current page number to 1. This is useful to reset page numbering for front matter.
+
+    % Abstract
+    \section*{Abstract}
+    This thesis investigates parameter-efficient fine-tuning of generative models for Computer-Aided Design (CAD) geometry generation. Specifically, we apply Low-Rank Adaptation (LoRA)---a parameter-efficient method introducing trainable rank decompositions---to the AutoBrep transformer-based model for domain-specific adaptation. We develop a complete pipeline for preprocessing CAD data, fine-tuning with LoRA adapters, and generating novel Boundary Representations. Our experiments demonstrate that domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters, enabling efficient adaptation on consumer-grade hardware. We evaluate training convergence, quantitative metrics, and scalability of multiple LoRA adapters across domains. This work makes practical generative CAD tools more accessible and establishes a foundation for future research in efficient neural model adaptation for design automation.
+    \clearpage
+    % \clearpage ensures that the following content starts on a new page.
+
+    % Acknowledgments
+    \section*{Acknowledgments}
+    I would like to extend my gratitude to my thesis supervisors, Matthew Keeler at the IDEAL lab and Dr. Daniel Wälchli at Manukai AG, for their invaluable guidance, insightful feedback, and continuous support throughout this research. Their expertise in generative modeling and engineering design has significantly shaped the direction and quality of this work.
+
+    \par
+
+    I thank the IDEAL lab team and Manukai AG for providing access to computational resources, enabling this research. Special thanks to the research communities working on generative design and parameter-efficient fine-tuning for their foundational contributions to this field.
+
+    \par
+
+    Finally, I am grateful to my colleagues and friends for their encouragement and constructive discussions during the development of this thesis. Their feedback and support were instrumental in bringing this work to completion.
+    \clearpage
+    % \clearpage ensures that the following content starts on a new page.
+
+    % Table of Contents
+    \tableofcontents
+    \clearpage
+    % Automatically generates the table of contents based on the sections, subsections, etc., in the document.
+    % \clearpage ensures that the following content starts on a new page.
+
+    % List of Figures
+    \listoffigures
+    \addcontentsline{toc}{section}{List of Figures}
+    \clearpage
+    % Generates a list of all figures included in the document.
+    % Adds an entry titled "List of Figures" to the table of contents.
+    % \clearpage ensures that the following content starts on a new page.
+
+    % List of Tables
+    \listoftables
+    \addcontentsline{toc}{section}{List of Tables}
+    \clearpage
+    % Generates a list of all tables included in the document.
+    % Adds an entry titled "List of Tables" to the table of contents.
+    % \clearpage ensures that the following content starts on a new page.
+
+    % Abbreviations
+    \include{abbreviations}
+    \clearpage
+    % Inserts the content of 'abbreviations.tex' here, which should contain a list of abbreviations used in the document.
+    % \clearpage ensures that the following content starts on a new page.
+
+    % Start Arabic Page Numbering
+    \pagenumbering{arabic}
+    % Changes page numbering to Arabic numerals (1, 2, 3, ...), typically used for the main body of the document.
+
+    \pagestyle{main}
+    % Sets the page style to 'main', which is defined in 'plusstyle.sty'.
+    % This usually includes customized headers and footers.
+
+    % Chapters
+    \include{chapters/chapter1}
+    % Chapter 1: Introduction - Problem statement, context, and thesis objectives
+
+    \include{chapters/chapter2_background}
+    % Chapter 2: Background and Related Work - B-Reps, generative models, LoRA, related work
+
+    \include{chapters/chapter3_methodology}
+    % Chapter 3: Methodology - AutoBrep architecture, LoRA integration, data pipeline, training setup
+
+    \include{chapters/chapter4_results}
+    % Chapter 4: Experimental Results - Training convergence, quantitative evaluation, qualitative analysis
+
+    \include{chapters/chapter5_discussion}
+    % Chapter 5: Discussion - Key findings, limitations, scalability, future directions
+
+    \include{chapters/chapter6_conclusion}
+    % Chapter 6: Conclusion - Summary of contributions, practical implications, final remarks
+
+    % Bibliography
+    \pagestyle{plain}
+    % Changes the page style to 'plain' for the bibliography section, typically removing headers and using simple footers.
+
+    \clearpage
+    \printbibliography
+    % Prints the bibliography based on the entries in 'references.bib' and the settings defined in the preamble.
+
+    \addcontentsline{toc}{section}{References}
+    % Adds an entry titled "References" to the table of contents.
+
+    \clearpage
+
+    % Appendices
+    \include{appendix}
+    % Includes the content of 'appendix.tex' which should contain any supplementary material or appendices.
+
+\end{document}

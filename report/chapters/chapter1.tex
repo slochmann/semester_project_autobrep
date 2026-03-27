@@ -1,0 +1,81 @@
+\section{Introduction}
+\label{chap:introduction}
+
+%===============================================================
+\subsection{Context and Motivation}
+%===============================================================
+
+The design and optimization of complex engineering artifacts is a cornerstone of innovation in manufacturing, aerospace, architecture, and countless other industries. However, the manual design process is time-consuming, requires extensive expertise, and often results in locally optimal solutions. Computer-Aided Design (CAD) systems have revolutionized this workflow, but they remain fundamentally manual: designers must iteratively specify geometry, test performance, and adjust parameters.
+
+The emergence of generative artificial intelligence—particularly deep learning models—offers a transformative opportunity to automate and augment the design process. Rather than requiring explicit specification of every geometric detail, generative models can learn patterns from existing designs and propose novel solutions that satisfy design constraints and objectives.
+
+%===============================================================
+\subsection{Problem Statement}
+%===============================================================
+
+Machine learning models for CAD geometry generation have been developed, including the state-of-the-art AutoBrep model, which uses transformer-based architectures to generate Boundary Representations (B-Reps) autoregressively. However, applying such models to new, specialized design domains presents significant challenges:
+
+\par
+
+\textbf{Key challenges:}
+\begin{itemize}
+    \item \textbf{Domain Adaptation}: Pre-trained models reflect patterns from their training data; specialized design domains (e.g., specific mechanical parts, architectural elements) may have unique characteristics not well-represented in general training corpora
+    \item \textbf{Computational Cost}: Fine-tuning large pre-trained models typically requires modifying all parameters, demanding substantial computational resources and memory
+    \item \textbf{Limited Data}: Specialized domains often have limited labeled CAD datasets, making classical supervised learning inefficient
+    \item \textbf{Accessibility}: The computational and expertise barriers limit adoption of generative CAD tools outside large technology companies
+\end{itemize}
+
+%===============================================================
+\subsection{Thesis Objective}
+%===============================================================
+
+This work addresses these challenges by investigating \textit{parameter-efficient fine-tuning} of generative CAD models using Low-Rank Adaptation (LoRA). The core research question is:
+
+\par
+
+\textbf{``How can large pre-trained generative CAD models be efficiently adapted to specialized design domains with minimal computational overhead?''}
+
+To answer this, we:
+\begin{enumerate}
+    \item Implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model
+    \item Demonstrate domain-specific adaptation on custom CAD datasets
+    \item Quantify efficiency gains (memory, training time, parameter count)
+    \item Analyze scalability of multiple LoRA adapters for different domains
+    \item Evaluate practical utility and limitations of the approach
+\end{enumerate}
+
+%===============================================================
+\subsection{Contributions}
+%===============================================================
+
+This thesis makes the following contributions to the field of generative design and machine learning for CAD:
+
+\par
+
+\begin{enumerate}
+    \item \textbf{Practical Framework}: An end-to-end implementation of LoRA fine-tuning for AutoBrep, including data preprocessing, training, and inference pipelines
+
+    \item \textbf{Efficiency Analysis}: Empirical demonstration that domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters, enabling fine-tuning on consumer-grade hardware
+
+    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, and experimental procedures enabling future research and practical adoption
+
+    \item \textbf{Scalability Insights}: Evidence that LoRA adapters can be trained independently and composed for multi-domain applications
+\end{enumerate}
+
+%===============================================================
+\subsection{Thesis Structure}
+%===============================================================
+
+The remainder of this thesis is organized as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter~\ref{chap:background}}: Background and related work on B-Reps, generative models for CAD, LoRA, and related domain adaptation techniques
+
+    \item \textbf{Chapter~\ref{chap:methodology}}: Detailed methodology covering AutoBrep architecture, LoRA integration, data preprocessing, and training procedures
+
+    \item \textbf{Chapter~\ref{chap:results}}: Experimental results including training convergence, quantitative evaluation, and qualitative analysis of generated models
+
+    \item \textbf{Chapter~\ref{chap:discussion}}: Discussion of findings, limitations, and directions for future research
+
+    \item \textbf{Chapter~\ref{chap:conclusion}}: Summary of contributions and practical implications
+\end{itemize}

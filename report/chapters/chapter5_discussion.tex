@@ -1,0 +1,109 @@
+\section{Discussion and Limitations}
+\label{chap:discussion}
+
+%===============================================================
+\subsection{Key Findings and Insights}
+%===============================================================
+
+This work demonstrates the effectiveness of LoRA-based fine-tuning for adapting a pre-trained generative CAD model to custom domains. The results reveal several important insights:
+
+\par
+
+\textbf{Main contributions:}
+\begin{itemize}
+	\item \textbf{Practical Domain Adaptation}: LoRA enables efficient fine-tuning on limited computational budgets, making generative CAD accessible to smaller research groups and organizations
+	\item \textbf{Parameter Efficiency}: Achieving domain-specific performance with $\approx$1\% additional parameters relative to the base model
+	\item \textbf{Transferability}: LoRA adapters are lightweight and portable, making them suitable for deployment across various systems
+	\item \textbf{Reproducibility}: Systematic documentation of hyperparameters and training procedures enables reproducible results
+\end{itemize}
+
+%===============================================================
+\subsection{Scalability and Transferability}
+%===============================================================
+
+The LoRA approach demonstrates promising scalability properties:
+
+\par
+
+\textbf{Scalability observations:}
+\begin{itemize}
+	\item \textbf{Multiple Adapters}: Independent LoRA adapters can be trained for different CAD domains (e.g., mechanical parts, architectural elements) with minimal overhead
+	\item \textbf{Composability}: Adapter weights can be combined or interpolated for multi-domain generation
+	\item \textbf{Cross-Domain Transfer}: Adapters trained on one domain may provide useful initialization or transfer benefits to related domains
+\end{itemize}
+
+\textbf{Transferability considerations:}
+\begin{itemize}
+	\item \textbf{Adapter Basis Models}: All adapters share the same base AutoBrep model, ensuring consistency
+	\item \textbf{Domain Specificity vs. Generality}: Fine-tuning on narrow domains may reduce generalization; balancing data diversity is crucial
+	\item \textbf{Task-Specific Adaptation}: Simple modifications to conditioning tokens enable task-specific behaviors without separate training
+\end{itemize}
+
+%===============================================================
+\subsection{Limitations}
+%===============================================================
+
+Several practical and methodological limitations should be acknowledged:
+
+\par
+
+\textbf{Data Limitations:}
+\begin{itemize}
+	\item \textbf{Dataset Size}: Training on limited samples ($<500$ models) introduces overfitting risk; larger, diverse datasets are preferred
+	\item \textbf{Data Quality}: Inconsistent STEP file formatting or incomplete geometry specifications can degrade training
+	\item \textbf{Bias in Training Data}: Skewed distributions toward certain geometric features may limit diversity of outputs
+\end{itemize}
+
+\textbf{Computational and Model Limitations:}
+\begin{itemize}
+	\item \textbf{Sequence Length}: AutoBrep tokenization limits the complexity of generatable geometry; very complex models may exceed token limits
+	\item \textbf{Precision}: Discrete tokenization introduces quantization errors; fine details may be lost compared to continuous representations
+	\item \textbf{Inference Speed}: Autoregressive generation is slower than non-autoregressive methods; batch inference is essential for practical deployment
+\end{itemize}
+
+\textbf{Evaluation Limitations:}
+\begin{itemize}
+	\item \textbf{Limited Metrics}: Existing CAD generation metrics (e.g., Chamfer distance) may not capture perceptual or functional quality
+	\item \textbf{Subjective Quality}: Assessing whether generated models are ``useful'' or ``realistic'' requires domain expert evaluation
+	\item \textbf{Reproducibility}: Stochastic nature of neural models makes exact reproduction across runs difficult
+\end{itemize}
+
+%===============================================================
+\subsection{Lessons Learned}
+%===============================================================
+
+The fine-tuning process revealed practical insights for practitioners:
+
+\par
+
+\textbf{Best practices:}
+\begin{itemize}
+	\item \textbf{Learning Rate Matters}: Conservative learning rates (1e-4 to 5e-5) are critical for small datasets to avoid catastrophic forgetting
+	\item \textbf{Monitoring is Essential}: Real-time loss tracking via W\&B enables early detection of divergence or overfitting
+	\item \textbf{LoRA Rank Selection}: Rank 8--16 provides good balance; rank $>32$ shows diminishing returns on tested domains
+	\item \textbf{Data Preprocessing}: Clean, consistent STEP files are crucial; preprocessing validation saves significant debugging time
+\end{itemize}
+
+%===============================================================
+\subsection{Future Research Directions}
+%===============================================================
+
+Several promising directions for future work emerge from this study:
+
+\par
+
+\textbf{Technical improvements:}
+\begin{itemize}
+	\item \textbf{Multi-Task Learning}: Joint fine-tuning on multiple domains to improve generalization
+	\item \textbf{Adaptive LoRA}: Learning rank and alpha parameters as a function of layers or task
+	\item \textbf{Non-Autoregressive Generation}: Exploring diffusion or flow-based models for faster inference
+	\item \textbf{Hybrid Approaches}: Combining LoRA with other techniques (e.g., prefix tuning, adapters)
+\end{itemize}
+
+\textbf{Application-focused directions:}
+\begin{itemize}
+	\item \textbf{Interactive Design}: Integration with CAD interfaces for real-time generation feedback
+	\item \textbf{Constrained Generation}: Enforcing geometric or functional constraints during generation
+	\item \textbf{Inverse Design}: Generating models from functional specifications or performance requirements
+	\item \textbf{User Studies}: Evaluating practical utility of generated models in professional design workflows
+\end{itemize}

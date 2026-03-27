@@ -7,3 +7,35 @@ data
 cloned_project
 home
 scratch
+output_images
+.vscode
+parquet_samples
+preprocessed_images
+
+## Latex
+# Ignore ALL compiled files and artifacts
+report/*.aux
+report/*.log
+report/*.out
+report/*.synctex.gz
+report/*.fls
+report/*.fdb_latexmk
+report/*.bbl
+report/*.bcf
+report/*.blg
+report/*.toc
+report/*.lof
+report/*.lot
+report/*.run.xml
+report/MAIN.pdf
+report/**/*.aux
+
+weekly_status
+
+# Editor files
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db

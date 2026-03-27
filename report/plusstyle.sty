@@ -1,0 +1,141 @@
+% plusstyle.sty
+% This is a custom LaTeX package designed to set up the styling and formatting
+% for documents, excluding the bibliography management which is handled separately.
+
+\NeedsTeXFormat{LaTeX2e} % Specifies that this package requires LaTeX2e or later.
+\ProvidesPackage{plusstyle} % Declares the name of the package.
+
+% ===============================================================
+% Load necessary packages except biblatex
+% These packages provide various functionalities such as layout, encoding,
+% mathematics, graphics, tables, hyperlinks, colors, spacing, and more.
+% ===============================================================
+
+\usepackage[a4paper, top=2cm, left=2cm, right=2cm, bottom=2cm]{geometry}
+% Sets the page size to A4 and defines the margins: 2cm on all sides.
+
+\usepackage[utf8]{inputenc}
+% Allows the use of UTF-8 encoding for input characters, enabling a wide range of characters.
+
+\usepackage[english]{babel}
+% Sets the language of the document to English, which affects hyphenation and other language-specific settings.
+
+\usepackage{amsmath, amssymb}
+% Provides advanced mathematical typesetting capabilities and additional mathematical symbols.
+
+\usepackage{booktabs}
+% Enhances the quality of tables by providing better spacing and line rules.
+
+\usepackage{graphicx}
+% Enables the inclusion and manipulation of images and graphics.
+
+\usepackage{caption}
+% Customizes the appearance and formatting of captions for figures and tables.
+
+\usepackage{tikz}
+% Facilitates the creation of high-quality diagrams and graphics directly within LaTeX.
+
+\usepackage{csquotes}
+% Provides advanced facilities for inline and display quotations, supporting various quotation styles.
+
+\usepackage{comment}
+% Allows for the inclusion of large blocks of commented-out text within the document.
+
+\usepackage{tabularx}
+% Enhances the standard tabular environment by allowing tables with adjustable-width columns.
+
+\usepackage{pdflscape}
+% Enables landscape orientation for specific pages, which is useful for wide tables or figures.
+
+\usepackage{mathtools}
+% Extends the functionalities of amsmath, providing additional mathematical symbols and tools.
+
+\usepackage{tablefootnote}
+% Allows the use of footnotes within tables, which is not natively supported in LaTeX.
+
+\usepackage{hyperref}
+% Adds hypertext capabilities to the document, such as clickable links and references.
+
+\usepackage{xcolor}
+% Provides extensive color management, allowing the use of predefined and custom colors.
+
+\usepackage[skip=10pt plus1pt, indent=40pt]{parskip}
+% Adjusts paragraph formatting by setting the vertical space between paragraphs (skip) and the indentation (indent).
+
+\usepackage{setspace}
+% Facilitates the control of line spacing within the document (e.g., single, one-and-a-half, double spacing).
+
+\usepackage{pgfplots}
+% Enables the creation of high-quality plots and graphs using the PGF/TikZ framework.
+
+\usepackage{fancyhdr}
+% Provides extensive customization of headers and footers in the document.
+
+% ===============================================================
+% Define Colors
+% These custom colors are defined using RGB values and are named for easy reference.
+% ===============================================================
+
+\definecolor{ETHBlue}{RGB}{33,92,175}    % Defines a shade of blue associated with ETH.
+\definecolor{ETHGreen}{RGB}{98,115,19}   % Defines a shade of green associated with ETH.
+\definecolor{ETHPurple}{RGB}{163,7,116}  % Defines a shade of purple associated with ETH.
+\definecolor{ETHGray}{RGB}{111,111,111}   % Defines a shade of gray associated with ETH.
+\definecolor{ETHRed}{RGB}{183,53,45}      % Defines a shade of red associated with ETH.
+\definecolor{ETHPetrol}{RGB}{0,120,148}   % Defines a teal/blue-green shade associated with ETH.
+\definecolor{ETHBronze}{RGB}{142,103,19}  % Defines a bronze shade associated with ETH.
+
+% ===============================================================
+% Hyperref Setup
+% Configures the behavior and appearance of hyperlinks within the document.
+% ===============================================================
+
+\hypersetup{
+    colorlinks=true,            % Enables colored links instead of the default colored boxes.
+    linkcolor=ETHBlue,          % Sets the color of internal links (e.g., table of contents) to ETHBlue.
+    filecolor=ETHPurple,        % Sets the color of file links to ETHPurple.
+    urlcolor=ETHPurple,         % Sets the color of external URL links to ETHPurple.
+    citecolor=ETHBlue,          % Sets the color of citation links to ETHBlue.
+    pdfpagemode=FullScreen      % Opens the PDF in full-screen mode by default.
+}
+
+% ===============================================================
+% Paragraph and Spacing
+% Sets the line spacing for the entire document.
+% ===============================================================
+
+\setstretch{1.2}
+% Increases the line spacing to 1.2 times the default, enhancing readability.
+
+% ===============================================================
+% PGFPlots Configuration
+% Sets default configurations for PGFPlots to ensure consistency across plots.
+% ===============================================================
+
+\pgfplotsset{width=10cm,compat=1.16}
+% Sets the default width of plots to 10cm and ensures compatibility with PGFPlots version 1.16.
+
+% ===============================================================
+% Fancyhdr Configuration
+% Customizes the headers and footers using the fancyhdr package.
+% ===============================================================
+
+\fancypagestyle{main}{
+    \fancyhf{} % Clears all header and footer fields.
+    \fancyhead[L]{\leftmark} % Places the chapter or section title on the left side of the header.
+    \fancyfoot[C]{\thepage} % Centers the page number in the footer.
+    \renewcommand{\headrulewidth}{0.4pt} % Sets the thickness of the header rule (line) to 0.4 points.
+}
+
+\fancypagestyle{plain}{
+    \fancyhf{} % Clears all header and footer fields.
+    \renewcommand{\headrulewidth}{0pt} % Removes the header rule (no line).
+    \fancyfoot[C]{\thepage} % Centers the page number in the footer.
+}
+
+% ===============================================================
+% Additional Settings
+% Includes additional packages or settings that are optional or may be modified as needed.
+% ===============================================================
+
+\RequirePackage{lipsum} % Includes the lipsum package for generating dummy text.
+% NOTE: Remove or keep this line based on whether you need dummy text in your document.

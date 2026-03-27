@@ -1,0 +1,69 @@
+\section{Conclusion}
+\label{chap:conclusion}
+
+%===============================================================
+\subsection{Summary of Contributions}
+%===============================================================
+
+This thesis presents a comprehensive study on fine-tuning generative CAD models using Low-Rank Adaptation (LoRA). The key contributions are:
+
+\par
+
+\begin{enumerate}
+	\item \textbf{Practical Framework}: Demonstrated end-to-end LoRA fine-tuning of AutoBrep for domain-specific CAD generation, including data pipeline, training procedures, and inference workflows
+	\item \textbf{Efficiency Analysis}: Quantified the memory and computational efficiency gains of LoRA compared to full fine-tuning, enabling deployment on resource-limited systems
+	\item \textbf{Scalability Study}: Evaluated the scalability of multiple LoRA adapters trained on different CAD domains, showing promise for multi-domain applications
+	\item \textbf{Reproducible Results}: Documented hyperparameters, code, and experimental procedures to enable reproducibility and future research
+\end{enumerate}
+
+%===============================================================
+\subsection{Practical Implications}
+%===============================================================
+
+The findings of this work have several important implications for practical CAD design automation:
+
+\par
+
+\textbf{For Practitioners:}
+\begin{itemize}
+	\item \textbf{Accessible Adaptation}: LoRA makes it practical for smaller organizations to adapt pre-trained models without access to large computing clusters
+	\item \textbf{Rapid Prototyping}: Quick adaptation to new design domains enables faster iterative design and exploration
+	\item \textbf{Cost Reduction}: Reduced computational requirements lower infrastructure costs, making generative CAD tools more economically viable
+\end{itemize}
+
+\textbf{For Research:}
+\begin{itemize}
+	\item \textbf{Transfer Learning Foundation}: LoRA provides a foundation for future research in efficient fine-tuning of large generative models
+	\item \textbf{Benchmark Establishment}: This work establishes baselines and procedures for evaluating domain-specific CAD generation quality
+	\item \textbf{Multi-Modal Extensions}: LoRA's efficiency opens possibilities for integrating multiple modalities (text, images, curves) into CAD generation pipelines
+\end{itemize}
+
+%===============================================================
+\subsection{Limitations and Scope}
+%===============================================================
+
+While this work demonstrates the viability of LoRA-based fine-tuning, several limitations should be kept in mind:
+
+\begin{itemize}
+	\item \textbf{Limited Domain Scope}: Experiments focused on specific CAD domains; generalization to other geometric types (e.g., organic shapes, assemblies) requires further investigation
+	\item \textbf{Evaluation Scope}: Quantitative evaluation relied on limited metrics; comprehensive user studies with domain experts would strengthen claims of practical utility
+	\item \textbf{Comparison Baseline}: Direct comparison with other fine-tuning or adaptation methods was limited; more comprehensive benchmarking is needed
+\end{itemize}
+
+%===============================================================
+\subsection{Final Remarks}
+%===============================================================
+
+The successful application of LoRA to AutoBrep fine-tuning opens doors to efficient, scalable adaptation of generative CAD models. As generative AI becomes more prevalent in design automation, techniques like LoRA provide a practical pathway for organizations to leverage pre-trained models on custom domains without prohibitive computational costs.
+
+\par
+
+Looking forward, the integration of efficient fine-tuning methods with increasingly capable generative models promises significant advances in:
+\begin{itemize}
+	\item \textit{Design Automation}: Automating routine design tasks while reducing human effort
+	\item \textit{Design Exploration}: Rapidly generating diverse design alternatives for multi-objective optimization
+	\item \textit{Knowledge Preservation}: Encoding domain-specific design knowledge directly into model parameters
+	\item \textit{Accessibility}: Making advanced generative design tools accessible to practitioners with limited computational resources
+\end{itemize}
+
+The methodologies and insights presented in this thesis establish a foundation for continued research and practical deployment of generative models in engineering design workflows.

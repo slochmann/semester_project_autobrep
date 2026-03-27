@@ -118,7 +118,7 @@ if __name__ == "__main__":
         process_single_file(step_file, output_dir)
     else:
         # Main process: find and spawn subprocesses for each file
-        step_dir = "/home/sebi/MSc/3.Sem/semester_thesis/brepgen-semester-thesis/euler/euler_scratch/AutoBrep/samples"
+        step_dir = "/home/sebi/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/euler_remote_mount/scratch/AutoBrep/lora_samples/600_cylinders"
         process_step_files_in_directory(step_dir)
 
 
