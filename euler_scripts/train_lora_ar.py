@@ -1,13 +1,25 @@
 import argparse
 import os
+import time
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.optim as optim
 import wandb
 from autobrep.data.abc_data import ARDataModule
+from autobrep.data.token_mapping import MMTokenIndex
+from autobrep.inference.brepgen_brep_builder import AutoBrepBuilder
+from autobrep.inference.inference_common import (
+    reconstruct_compound,
+    save_debug_images,
+)
 from autobrep.models.autoregressive import AutoBrepModel
+from autobrep.models.vaes import EdgeFSQVAE, SurfaceFSQVAE
+from einops import rearrange
+from occwl.io import save_step as save_step_func
 from peft import LoraConfig, get_peft_model
+from PIL import Image
 
 # Get SLURM job name (or None if not running under SLURM)
 job_name = os.environ.get("SLURM_JOB_NAME", "local_run")
@@ -76,7 +88,286 @@ def parse_args():
     )
     parser.add_argument("--seed", type=int, default=1, help="Random seed")
 
+    # Inference sampling during training
+    parser.add_argument(
+        "--sample_interval",
+        type=int,
+        default=100,
+        help="Interval (in training steps) to run inference sampling",
+    )
+    parser.add_argument(
+        "--num_samples_to_generate",
+        type=int,
+        default=24,
+        help="Number of samples to generate during inference sampling",
+    )
+    parser.add_argument(
+        "--sample_batch_size",
+        type=int,
+        default=5,
+        help="Batch size for inference sampling (generate in smaller batches to manage memory)",
+    )
+    parser.add_argument(
+        "--sample_temperature",
+        type=float,
+        default=0.8,
+        help="Sampling temperature for generation",
+    )
+    parser.add_argument(
+        "--sample_threshold",
+        type=float,
+        default=0.95,
+        help="Top-p sampling threshold for generation",
+    )
+    parser.add_argument(
+        "--sample_complexity",
+        type=int,
+        default=14,
+        help="Complexity token (14=easy, 15=medium, 16=hard, 17=random)",
+    )
+
     return parser.parse_args()
+
+
+def sample_during_training(
+    model,
+    device,
+    surface_fsq,
+    edge_fsq,
+    args,
+    step_num,
+    epoch,
+    output_dir,
+    wandb_run=None,
+):
+    """
+    Run inference sampling during training for visualization.
+
+    Args:
+        model: AutoBrepModel with LoRA adapters attached
+        device: torch device
+        surface_fsq: Surface FSQ VAE for decoding
+        edge_fsq: Edge FSQ VAE for decoding
+        args: parsed arguments
+        step_num: current training step
+        epoch: current epoch
+        output_dir: directory to save samples
+        wandb_run: wandb run object (optional)
+    """
+    print(f"\n{'=' * 80}")
+    print(f"🎨 INFERENCE SAMPLING at Step {step_num}, Epoch {epoch}")
+    print(f"{'=' * 80}")
+
+    sample_dir = Path(output_dir) / f"samples_step_{step_num:06d}"
+    sample_dir.mkdir(exist_ok=True, parents=True)
+
+    model.eval()
+    generated_samples = []
+
+    # Generate samples in batches
+    num_batches = int(np.ceil(args.num_samples_to_generate / args.sample_batch_size))
+    with torch.no_grad():
+        for batch_idx in range(num_batches):
+            current_batch_size = min(
+                args.sample_batch_size,
+                args.num_samples_to_generate - batch_idx * args.sample_batch_size,
+            )
+
+            # Create prompt for sampling
+            prompt = (
+                torch.LongTensor(
+                    [
+                        MMTokenIndex.BOS.value,
+                        MMTokenIndex.BOM.value,
+                        args.sample_complexity,
+                        MMTokenIndex.EOM.value,
+                        MMTokenIndex.BOC.value,
+                    ]
+                    * current_batch_size
+                )
+                .reshape(current_batch_size, 5)
+                .to(device)
+            )
+
+            try:
+                # Generate tokens
+                samples = model.generate(
+                    prompt, args.sample_temperature, args.sample_threshold
+                )
+                full_seqs = torch.concat([prompt, samples], dim=-1)
+                for seq in full_seqs:
+                    generated_samples.append(seq.unsqueeze(0).detach())
+                print(f"  ✅ Batch {batch_idx + 1}/{num_batches} generated")
+            except Exception as e:
+                print(f"  ❌ Error generating batch {batch_idx + 1}: {e}")
+
+    # Decode tokens and convert to CAD data
+    print(f"\nDecoding {len(generated_samples)} sequences...")
+    batch_decoded = []
+
+    for idx, generated_seq in enumerate(generated_samples):
+        sample = generated_seq[0].cpu().detach().numpy()
+
+        try:
+            cad_tokens = None
+            geom_tokens = None
+            if MMTokenIndex.BOGEOM.value in sample:
+                geom_s = np.where(sample == MMTokenIndex.BOGEOM.value)[0][0]
+                geom_e = np.where(sample == MMTokenIndex.EOGEOM.value)[0][0]
+                geom_tokens = sample[geom_s + 1 : geom_e]
+
+            if MMTokenIndex.BOC.value in sample:
+                cad_s = np.where(sample == MMTokenIndex.BOC.value)[0][0]
+                cad_e = np.where(sample == MMTokenIndex.EOC.value)[0][0]
+                cad_tokens = sample[cad_s + 1 : cad_e]
+
+                if geom_tokens is not None:
+                    cad_tokens = np.concatenate((geom_tokens, cad_tokens))
+
+            if cad_tokens is None:
+                raise ValueError("No CAD tokens found in sample")
+
+            pos_faces, code_faces, pos_edges, code_edges, face_edge_adj = model.decode(
+                cad_tokens
+            )
+
+            # Decode surfaces and edges
+            geomZ_faces = surface_fsq.quantizer.indices_to_codes(
+                torch.LongTensor(code_faces).to(device)
+            ).permute(0, 2, 1)
+            uv_ncs_faces = surface_fsq.decode(geomZ_faces.unflatten(-1, (2, 2))).sample
+            uv_ncs_faces = (
+                rearrange(uv_ncs_faces, "b d ... -> b ... d")
+                .float()
+                .cpu()
+                .detach()
+                .numpy()
+            )
+
+            geomZ_edges = edge_fsq.quantizer.indices_to_codes(
+                torch.LongTensor(code_edges).to(device)
+            ).permute(0, 2, 1)
+            uv_ncs_edges = edge_fsq.decode(geomZ_edges).sample
+            uv_ncs_edges = (
+                rearrange(uv_ncs_edges, "b d ... -> b ... d")
+                .float()
+                .cpu()
+                .detach()
+                .numpy()
+            )
+
+            batch_decoded.append(
+                (pos_faces, pos_edges, uv_ncs_edges, uv_ncs_faces, face_edge_adj)
+            )
+        except Exception as e:
+            print(f"  ⚠️ Error decoding sample {idx}: {e}")
+            continue
+
+    print(f"  ✅ Successfully decoded {len(batch_decoded)} sequences")
+
+    # Convert to CAD data and reconstruct
+    print("\nReconstructing geometries...")
+    from autobrep.models.autoregressive import AutoRegressiveSampler
+
+    batch_cad_data = AutoRegressiveSampler.convert_to_cad_data(batch_decoded)
+    builders = [
+        AutoBrepBuilder(
+            device=device, z_threshold=0.5, vertex_threshold=0.02, sewing_tolerance=1e-4
+        )
+    ]
+
+    success_count = 0
+    sample_images_list = []  # List to store concatenated face+edge images
+    for sample_idx, cad_data in enumerate(batch_cad_data):
+        sample_stem = f"step_{step_num:06d}_sample_{str(sample_idx).zfill(3)}"
+        try:
+            # Save debug images
+            face_img_path = sample_dir / f"{sample_stem}_face.png"
+            edge_img_path = sample_dir / f"{sample_stem}_edge.png"
+
+            save_debug_images(
+                cad_data,
+                face_img_path,
+                edge_img_path,
+            )
+
+            # Reconstruct and save STEP
+            result = reconstruct_compound(cad_data, builders)
+            if result is not None:
+                step_path = sample_dir / f"{sample_stem}.step"
+                save_step_func([result], step_path)
+                success_count += 1
+
+                # Load and concatenate face + edge images
+                try:
+                    face_img = Image.open(face_img_path)
+                    edge_img = Image.open(edge_img_path)
+                    # Concatenate horizontally
+                    concat_img = Image.new(
+                        "RGB",
+                        (face_img.width + edge_img.width, face_img.height),
+                    )
+                    concat_img.paste(face_img, (0, 0))
+                    concat_img.paste(edge_img, (face_img.width, 0))
+                    sample_images_list.append(concat_img)
+                except Exception as e:
+                    print(f"  ⚠️ Sample {sample_idx}: error concatenating images: {e}")
+
+                print(f"  ✅ Sample {sample_idx}: reconstructed and saved")
+            else:
+                print(f"  ⚠️ Sample {sample_idx}: reconstruction returned None")
+        except Exception as e:
+            print(f"  ⚠️ Sample {sample_idx}: error during reconstruction: {e}")
+
+    # Create a 6x4 collage from the 24 samples
+    collage = None
+    if len(sample_images_list) >= 1:
+        # Use only the first 24 samples (or fewer if less generated)
+        sample_images_list = sample_images_list[:24]
+
+        # Determine collage grid size based on successful samples
+        num_samples = len(sample_images_list)
+        grid_cols = 4  # 4 columns
+        grid_rows = 6  # 6 rows for 24 samples
+
+        if num_samples > 0:
+            # Get image dimensions from first sample
+            img_width = sample_images_list[0].width
+            img_height = sample_images_list[0].height
+
+            # Create collage canvas
+            collage_width = img_width * grid_cols
+            collage_height = img_height * grid_rows
+            collage = Image.new("RGB", (collage_width, collage_height))
+
+            # Paste images into grid
+            for idx, img in enumerate(sample_images_list):
+                row = idx // grid_cols
+                col = idx % grid_cols
+                x = col * img_width
+                y = row * img_height
+                collage.paste(img, (x, y))
+
+    # Log to wandb
+    if wandb_run is not None:
+        log_dict = {
+            "sampling/success_rate": success_count / max(len(batch_cad_data), 1),
+            "sampling/num_valid": success_count,
+        }
+
+        # Log collage if available
+        if collage is not None:
+            collage_path = sample_dir / "collage.png"
+            collage.save(collage_path)
+            log_dict["sampling/collage"] = wandb.Image(str(collage_path))
+
+        wandb.log(log_dict, step=step_num)
+        print("  📊 Logged sampling metrics to wandb")
+
+    print(f"  📁 Samples saved to {sample_dir}")
+    print(f"{'=' * 80}\n")
+
+    model.train()  # Resume training mode
 
 
 def train_lora(
@@ -88,6 +379,10 @@ def train_lora(
     device,
     num_epochs=5,
     wandb_run=None,
+    surface_fsq=None,
+    edge_fsq=None,
+    args=None,
+    output_dir=None,
 ):
     """
     Fine-tune LoRA adapters on BREP generation task.
@@ -98,6 +393,7 @@ def train_lora(
     model.cad_gpt.train()
 
     loss_history = []
+    global_step = 0
 
     print("\n" + "=" * 80)
     print("STARTING LORA FINE-TUNING")
@@ -142,6 +438,7 @@ def train_lora(
             epoch_loss += loss.item()
             num_batches += 1
             loss_history.append(loss.item())
+            global_step += 1
 
             # Clean up GPU cache to avoid memory fragmentation
             if batch_idx % 10 == 0:
@@ -162,8 +459,38 @@ def train_lora(
                         {
                             "loss": avg_loss,
                             "learning_rate": lr,
-                        }
+                        },
+                        step=global_step,
                     )
+
+            # Periodic inference sampling
+            if (
+                args is not None
+                and global_step % args.sample_interval == 0
+                and global_step > 0
+            ):
+                sample_during_training(
+                    model=model,
+                    device=device,
+                    surface_fsq=surface_fsq,
+                    edge_fsq=edge_fsq,
+                    args=args,
+                    step_num=global_step,
+                    epoch=epoch + 1,
+                    output_dir=output_dir,
+                    wandb_run=wandb_run,
+                )
+
+                # Save LoRA checkpoint at sampling milestone
+                if output_dir is not None:
+                    ckpt_dir = Path(output_dir) / f"checkpoint_step_{global_step:06d}"
+                    ckpt_dir.mkdir(exist_ok=True, parents=True)
+                    model_lora.save_pretrained(ckpt_dir)
+                    print(f"💾 LoRA checkpoint saved to {ckpt_dir}")
+
+                # Resume training mode
+                model_lora.train()
+                model.cad_gpt.train()
 
         avg_epoch_loss = epoch_loss / max(num_batches, 1)
         print(
@@ -194,7 +521,8 @@ def main():
     torch.manual_seed(args.seed)
 
     # Initialize wandb
-    run_name = f"{job_name}"
+    timestamp = int(time.time())
+    run_name = f"{job_name}_{timestamp}"
     if args.track:
         wandb.init(
             project=args.wandb_project,
@@ -203,8 +531,6 @@ def main():
             save_code=True,
             name=run_name,
         )
-    else:
-        wandb_run = None
 
     # 1. Load Model
     print("Loading base AutoBrepModel...")
@@ -217,6 +543,21 @@ def main():
         map_location=device,
     )
     model.to(device).eval()
+
+    # 1b. Load VAEs for inference sampling
+    print("Loading VAEs for inference sampling...")
+    surface_fsq = (
+        SurfaceFSQVAE.load_from_checkpoint(f"{args.ckpt_dir}/surf-fsq.ckpt")
+        .drop_encoder()
+        .to(device)
+        .eval()
+    )
+    edge_fsq = (
+        EdgeFSQVAE.load_from_checkpoint(f"{args.ckpt_dir}/edge-fsq.ckpt")
+        .drop_encoder()
+        .to(device)
+        .eval()
+    )
 
     # 2. Configure LoRA
     print(f"Configuring LoRA... (r={args.lora_r}, alpha={args.lora_alpha})")
@@ -280,6 +621,10 @@ def main():
         device=device,
         num_epochs=args.num_epochs,
         wandb_run=wandb.run if args.track else None,
+        surface_fsq=surface_fsq,
+        edge_fsq=edge_fsq,
+        args=args,
+        output_dir=args.output_dir,
     )
 
     out_dir = Path(args.output_dir)

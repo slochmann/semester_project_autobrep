@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=100_cylinders
+#SBATCH --job-name=600_cubes
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8

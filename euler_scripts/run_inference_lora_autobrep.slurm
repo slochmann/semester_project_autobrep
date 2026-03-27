@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=100_cylinders
-#SBATCH --time=01:00:00
+#SBATCH --job-name=600_cylinders
+#SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G                   # Total 32G

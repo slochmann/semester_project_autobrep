@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=100_cylinders
+#SBATCH --job-name=600_cubes
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -77,7 +77,7 @@ echo "Starting LoRA Fine-Tuning..."
     --batch_size 4 \
     --num_epochs 50 \
     --learning_rate 1e-4 \
-    --lora_r 8 \
+    --lora_r 16 \
     --lora_alpha 32 \
     --wandb_project "lora-autobrep" \
     --wandb_entity "slochmann-ethz"
