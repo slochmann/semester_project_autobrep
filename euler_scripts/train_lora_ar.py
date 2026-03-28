@@ -90,10 +90,10 @@ def parse_args():
 
     # Inference sampling during training
     parser.add_argument(
-        "--sample_interval",
+        "--sample_interval_epochs",
         type=int,
-        default=100,
-        help="Interval (in training steps) to run inference sampling",
+        default=1,
+        help="Interval (in epochs) to run inference sampling",
     )
     parser.add_argument(
         "--num_samples_to_generate",
@@ -386,6 +386,7 @@ def train_lora(
 ):
     """
     Fine-tune LoRA adapters on BREP generation task.
+    Scheduler runs continuously across epochs - no recreation mid-training.
     """
     # Cast to bfloat16 for training
     model.to(device).to(dtype=torch.bfloat16)
@@ -463,39 +464,35 @@ def train_lora(
                         step=global_step,
                     )
 
-            # Periodic inference sampling
-            if (
-                args is not None
-                and global_step % args.sample_interval == 0
-                and global_step > 0
-            ):
-                sample_during_training(
-                    model=model,
-                    device=device,
-                    surface_fsq=surface_fsq,
-                    edge_fsq=edge_fsq,
-                    args=args,
-                    step_num=global_step,
-                    epoch=epoch + 1,
-                    output_dir=output_dir,
-                    wandb_run=wandb_run,
-                )
-
-                # Save LoRA checkpoint at sampling milestone
-                if output_dir is not None:
-                    ckpt_dir = Path(output_dir) / f"checkpoint_step_{global_step:06d}"
-                    ckpt_dir.mkdir(exist_ok=True, parents=True)
-                    model_lora.save_pretrained(ckpt_dir)
-                    print(f"💾 LoRA checkpoint saved to {ckpt_dir}")
-
-                # Resume training mode
-                model_lora.train()
-                model.cad_gpt.train()
-
         avg_epoch_loss = epoch_loss / max(num_batches, 1)
         print(
-            f"\n✅ Epoch {epoch + 1}/{num_epochs} completed | Avg Loss: {avg_epoch_loss:.4f}\n"
+            f"\n✅ Epoch {epoch + 1}/{num_epochs} completed | Avg Loss: {avg_epoch_loss:.4f} | Batches: {num_batches}\n"
         )
+
+        # Periodic inference sampling at epoch intervals
+        if args is not None and (epoch + 1) % args.sample_interval_epochs == 0:
+            sample_during_training(
+                model=model,
+                device=device,
+                surface_fsq=surface_fsq,
+                edge_fsq=edge_fsq,
+                args=args,
+                step_num=global_step,
+                epoch=epoch + 1,
+                output_dir=output_dir,
+                wandb_run=wandb_run,
+            )
+
+            # Save LoRA checkpoint at sampling milestone
+            if output_dir is not None:
+                ckpt_dir = Path(output_dir) / f"checkpoint_epoch_{epoch + 1:03d}"
+                ckpt_dir.mkdir(exist_ok=True, parents=True)
+                model_lora.save_pretrained(ckpt_dir)
+                print(f"💾 LoRA checkpoint saved to {ckpt_dir}")
+
+            # Resume training mode
+            model_lora.train()
+            model.cad_gpt.train()
 
         # Log epoch summary to wandb
         if wandb_run is not None:
@@ -522,7 +519,8 @@ def main():
 
     # Initialize wandb
     timestamp = int(time.time())
-    run_name = f"{job_name}_{timestamp}"
+    # Create a descriptive run name using hyperparameters
+    run_name = f"{job_name}_T{args.sample_temperature}_comp{args.sample_complexity}_r{args.lora_r}_a{args.lora_alpha}_{timestamp}"
     if args.track:
         wandb.init(
             project=args.wandb_project,
@@ -601,15 +599,18 @@ def main():
         eps=1e-5,
     )
 
-    # Calculate steps per epoch
-    try:
-        steps_per_epoch = max(1, len(train_dataloader))
-    except TypeError:
-        # Fallback if ARDataModule uses IterableDataset with no len()
-        steps_per_epoch = 25
+    # Count actual batches in dataset for accurate scheduler initialization
+    print("Counting batches in training dataset...")
+    num_batches_counted = 0
+    for _ in train_dataloader:
+        num_batches_counted += 1
 
-    total_steps = args.num_epochs * steps_per_epoch
+    total_steps = args.num_epochs * num_batches_counted
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps)
+    print(f"✅ Dataset has {num_batches_counted} batches per epoch")
+    print(
+        f"Scheduler initialized with T_max={total_steps} ({num_batches_counted} steps/epoch × {args.num_epochs} epochs)"
+    )
 
     # 5. Train and Save
     loss_history = train_lora(
