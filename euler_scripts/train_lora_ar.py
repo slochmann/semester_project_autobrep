@@ -370,10 +370,50 @@ def sample_during_training(
     model.train()  # Resume training mode
 
 
+def validate(model, model_lora, val_dataloader, device):
+    """
+    Run validation on the full validation set.
+    Returns average validation loss.
+    """
+    model_lora.eval()
+    val_loss = 0.0
+    num_batches = 0
+
+    with torch.no_grad():
+        for batch in val_dataloader:
+            token = batch["seq"].to(device)
+            face_ncs = batch["face_ncs"].to(device).to(dtype=torch.bfloat16)
+            edge_ncs = batch["edge_ncs"].to(device).to(dtype=torch.bfloat16)
+
+            # Encode FSQ codes (same as training) - use base model
+            surf_id, edge_id = model.encode_fsq_code(face_ncs, edge_ncs)
+
+            updated_tokens = []
+            for _token, _surf_id, _edge_id in zip(token, surf_id, edge_id):
+                batch_data = model.copy_fsq_code(_token, _surf_id, _edge_id)
+                batch_data = torch.nn.functional.pad(
+                    batch_data,
+                    (0, model.pad_len - len(batch_data)),
+                    value=-1,
+                )
+                updated_tokens.append(batch_data)
+
+            updated_tokens = torch.stack(updated_tokens).detach()
+
+            # Forward pass using model_lora
+            loss = model_lora(updated_tokens)
+
+            val_loss += loss.item()
+            num_batches += 1
+
+    return val_loss / max(num_batches, 1)
+
+
 def train_lora(
     model,
     model_lora,
     dataloader,
+    val_dataloader,
     optimizer,
     scheduler,
     device,
@@ -469,6 +509,32 @@ def train_lora(
             f"\n✅ Epoch {epoch + 1}/{num_epochs} completed | Avg Loss: {avg_epoch_loss:.4f} | Batches: {num_batches}\n"
         )
 
+        # Run validation
+        print("Running validation...")
+        val_loss_avg = validate(model, model_lora, val_dataloader, device)
+        print(f"   Validation Loss: {val_loss_avg:.4f}\n")
+
+        # Log to wandb
+        if wandb_run is not None:
+            wandb.log(
+                {
+                    "epoch_loss": avg_epoch_loss,
+                    "val_loss": val_loss_avg,
+                }
+            )
+        else:
+            # Still log epoch loss if not using wandb
+            if wandb_run is not None:
+                wandb.log(
+                    {
+                        "epoch_loss": avg_epoch_loss,
+                    }
+                )
+
+        # Resume training mode for next epoch
+        model_lora.train()
+        model.cad_gpt.train()
+
         # Periodic inference sampling at epoch intervals
         if args is not None and (epoch + 1) % args.sample_interval_epochs == 0:
             sample_during_training(
@@ -493,14 +559,6 @@ def train_lora(
             # Resume training mode
             model_lora.train()
             model.cad_gpt.train()
-
-        # Log epoch summary to wandb
-        if wandb_run is not None:
-            wandb.log(
-                {
-                    "epoch_loss": avg_epoch_loss,
-                }
-            )
 
     print("=" * 80)
     print("TRAINING COMPLETE!")
@@ -590,6 +648,7 @@ def main():
     )
     data_module.setup(stage="fit")
     train_dataloader = data_module.train_dataloader()
+    val_dataloader = data_module.val_dataloader()
 
     # 4. Setup Optimizer and Scheduler
     optimizer = optim.AdamW(
@@ -618,6 +677,7 @@ def main():
         model=model,
         model_lora=model_lora,
         dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
         optimizer=optimizer,
         scheduler=scheduler,
         device=device,

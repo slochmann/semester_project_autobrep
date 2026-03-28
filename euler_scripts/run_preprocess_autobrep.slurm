@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=600_cubes
+#SBATCH --job-name=600_cylinders
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -30,16 +30,23 @@ unset PYTHONPATH
 #------------------------------------------------------------------------------
 NAME="${SLURM_JOB_NAME}"
 INPUT_DIR="$SCRATCH/AutoBrep/data/step/$NAME"
-OUTPUT_FILE="$SCRATCH/AutoBrep/data/parquet/train/$NAME.parquet"
+OUTPUT_DIR="$SCRATCH/AutoBrep/data/parquet/$NAME"
 
 SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/preprocess_step_to_parquet.py"
 
-echo "Starting Preprocessing from STEP to Parquet..."
+echo "Starting Preprocessing from STEP to Parquet with Train/Val Split..."
+echo "Input:  $INPUT_DIR"
+echo "Output: $OUTPUT_DIR (train/ and val/ subdirectories)"
+echo ""
 "$PYTHON" "$SCRIPT_PATH" \
     --input_dir "$INPUT_DIR" \
-    --output_file "$OUTPUT_FILE"
+    --output_dir "$OUTPUT_DIR" \
+    --train_val_split 0.9 \
+    --seed 42
 
+echo ""
 echo "================================================================"
 echo " Preprocessing complete!"
-echo " Output saved to: $OUTPUT_FILE"
+echo " Train data saved to:  $OUTPUT_DIR/train/data.parquet"
+echo " Val data saved to:    $OUTPUT_DIR/val/data.parquet"
 echo "================================================================"

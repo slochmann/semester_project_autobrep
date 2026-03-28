@@ -57,7 +57,7 @@ export HF_TOKEN="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"
 #------------------------------------------------------------------------------
 AUTOBREP_DIR="$SCRATCH/AutoBrep"
 CKPT_DIR="$SCRATCH/AutoBrep/checkpoints"
-DATASET_PATH="$SCRATCH/AutoBrep/data/parquet"
+DATASET_PATH="$SCRATCH/AutoBrep/data/parquet/$NAME"
 OUTPUT_DIR="$CKPT_DIR/$NAME"
 
 SCRIPT_PATH="$HOME/semester_project_euler/euler_scripts/train_lora_ar.py"
@@ -76,9 +76,9 @@ echo "Starting LoRA Fine-Tuning..."
     --output_dir "$OUTPUT_DIR" \
     --batch_size 4 \
     --num_epochs 5 \
-    --learning_rate 1e-5 \
-    --sample_temperature 0.8 \
-    --sample_complexity 14 \
+    --learning_rate 5e-5 \
+    --sample_temperature 0.3 \
+    --sample_complexity 15 \
     --sample_interval_epochs 1 \
     --lora_r 16 \
     --lora_alpha 32 \

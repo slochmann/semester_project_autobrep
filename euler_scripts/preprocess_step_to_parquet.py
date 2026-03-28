@@ -348,17 +348,24 @@ def process_step_file(step_path, verbose=False):
         return None
 
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess STEP files to AutoBrep Parquet format")
+    parser = argparse.ArgumentParser(description="Preprocess STEP files to AutoBrep Parquet format with train/val split")
     parser.add_argument("--input_dir", type=str, required=True, help="Directory containing input STEP files")
-    parser.add_argument("--output_file", type=str, required=True, help="Output path for the Parquet file")
+    parser.add_argument("--output_dir", type=str, required=True, help="Output directory (will create train/ and val/ subdirs)")
+    parser.add_argument("--train_val_split", type=float, default=0.8, help="Fraction of data for training (default: 0.8)")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducible split")
     args = parser.parse_args()
 
     step_dir = Path(args.input_dir)
-    output_file = Path(args.output_file)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    train_dir = output_dir / "train"
+    val_dir = output_dir / "val"
+    train_dir.mkdir(exist_ok=True)
+    val_dir.mkdir(exist_ok=True)
 
     print(f"Input STEP files: {step_dir}")
-    print(f"Output Parquet file: {output_file}")
+    print(f"Output directory: {output_dir}")
+    print(f"Train/Val split: {args.train_val_split:.1%} / {1 - args.train_val_split:.1%}")
 
     print("Processing STEP files to point clouds...\n")
 
@@ -380,16 +387,40 @@ def main():
 
     print(f"\n✓ Successfully processed: {success_count}/{len(step_files)} files")
 
-    # Save to Parquet
+    # Create train/val split
     if data_list:
         df = pd.DataFrame(data_list)
-        df.to_parquet(output_file, engine='pyarrow', index=False)
-
+        
+        # Shuffle and split
+        rng = np.random.RandomState(args.seed)
+        indices = rng.permutation(len(df))
+        split_idx = int(len(df) * args.train_val_split)
+        
+        train_indices = indices[:split_idx]
+        val_indices = indices[split_idx:]
+        
+        df_train = df.iloc[train_indices].reset_index(drop=True)
+        df_val = df.iloc[val_indices].reset_index(drop=True)
+        
+        # Save train split
+        train_file = train_dir / "data.parquet"
+        df_train.to_parquet(train_file, engine='pyarrow', index=False)
+        print(f"\n✅ Saved {len(df_train)} training samples to {train_file}")
+        print(f"   Size: {train_file.stat().st_size / 1e6:.1f} MB")
+        
+        # Save val split
+        val_file = val_dir / "data.parquet"
+        df_val.to_parquet(val_file, engine='pyarrow', index=False)
+        print(f"\n✅ Saved {len(df_val)} validation samples to {val_file}")
+        print(f"   Size: {val_file.stat().st_size / 1e6:.1f} MB")
+        
         # Verify
-        df_check = pd.read_parquet(output_file)
-        print(f"\n✅ Saved {len(df_check)} samples to {output_file}")
-        print(f"  Shape: {df_check.shape}")
-        print(f"  Size: {output_file.stat().st_size / 1e6:.1f} MB")
+        df_train_check = pd.read_parquet(train_file)
+        df_val_check = pd.read_parquet(val_file)
+        print(f"\n📊 Final dataset:")
+        print(f"   Train: {len(df_train_check)} samples")
+        print(f"   Val:   {len(df_val_check)} samples")
+        print(f"   Total: {len(df_train_check) + len(df_val_check)} samples")
     else:
         print("❌ No valid samples to save")
 
