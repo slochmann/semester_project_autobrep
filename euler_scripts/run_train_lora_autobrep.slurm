@@ -75,10 +75,10 @@ echo "Starting LoRA Fine-Tuning..."
     --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
     --batch_size 4 \
-    --num_epochs 20 \
-    --learning_rate 1e-4 \
-    --sample_temperature 0.6 \
-    --sample_complexity 15 \
+    --num_epochs 5 \
+    --learning_rate 1e-5 \
+    --sample_temperature 0.8 \
+    --sample_complexity 14 \
     --sample_interval_epochs 1 \
     --lora_r 16 \
     --lora_alpha 32 \

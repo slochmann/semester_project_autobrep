@@ -520,7 +520,7 @@ def main():
     # Initialize wandb
     timestamp = int(time.time())
     # Create a descriptive run name using hyperparameters
-    run_name = f"{job_name}_T{args.sample_temperature}_comp{args.sample_complexity}_r{args.lora_r}_a{args.lora_alpha}_{timestamp}"
+    run_name = f"{job_name}_T{args.sample_temperature}_comp{args.sample_complexity}_lr{args.learning_rate}_r{args.lora_r}_a{args.lora_alpha}_{timestamp}"
     if args.track:
         wandb.init(
             project=args.wandb_project,
@@ -582,6 +582,7 @@ def main():
         load_meta=True,
         uv_invariant=True,
         batch_size=args.batch_size,
+        buffer_size=1000,
         num_workers=args.num_workers,  # 0 for single-process loading (memory safe)
         drop_last=True,
         pin_memory=(args.num_workers > 0),  # Only pin if using workers
