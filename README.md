@@ -4,69 +4,100 @@ Fine-tuning and inference scripts for [AutoBrep](https://github.com/AutodeskAILa
 
 ## Quick Start
 
-**1. Setup (Euler, once only):**
+**1. Setup (Euler, once):**
 ```bash
 bash euler_scripts/create_env_autobrep.sh
 sbatch euler_scripts/download_autobrep_ckpt.slurm
 ```
 
-**2. Prepare data:**
+**2. Add training data to Euler:**
+After setup completes, copy your STEP files to `$SCRATCH/AutoBrep/data/step/`:
 ```bash
-python euler_scripts/preprocess_step_to_parquet.py \
-    --input_dir /path/to/steps --output_dir $SCRATCH/AutoBrep/data/parquet --train_split 0.9
+scp -r /local/path/to/steps euler:$SCRATCH/AutoBrep/data/step/
 ```
 
-**3. Train LoRA adapter:**
+**3. Preprocess data:**
+```bash
+sbatch euler_scripts/run_preprocess_autobrep.slurm
+```
+Converts STEP → parquet (UV grids, bboxes) into `$SCRATCH/AutoBrep/data/parquet/{train,val}/`
+
+**4. Train LoRA adapter:**
 ```bash
 sbatch euler_scripts/run_train_lora_autobrep.slurm
 ```
-Edit `run_train_lora_autobrep.slurm` to adjust: `--learning_rate` (1e-4 default), `--num_epochs` (50), `--batch_size` (4), `--lora_r` (8).
+Edit `run_train_lora_autobrep.slurm` to adjust: `--learning_rate` (1e-4), `--num_epochs` (5), `--batch_size` (2), `--lora_r` (8).
 
-**4. Generate B-Reps:**
+**Samples generated during training** are logged to W&B in real-time. View them at https://wandb.ai/slochmann-ethz/lora-autobrep.
+
+**5. (Optional) Generate more B-Reps:**
+For additional inference runs beyond samples logged during training:
 ```bash
 sbatch euler_scripts/run_inference_lora_autobrep.slurm
 ```
-Edit for: `--num_samples` (200), `--complexity` (14=easy, 15=medium, 16=hard), `--temperature` (1.0), `--threshold` (0.95).
+Edit for: `--num_samples` (10), `--complexity` (14=easy, 15=medium, 16=hard), `--temperature` (0.8).
 
-**5. Visualize locally:**
+**6. Visualize locally:**
 ```bash
-python local_visualization/render_images2.py /path/to/steps
+scp -r euler:\$SCRATCH/AutoBrep/lora_samples /local/output/path
+python local_visualization/render_images2.py /local/output/path/lora_samples
 python local_visualization/make_gifs3.py
 ```
 
-## Key Scripts
+## Project Structure
 
-| Script | Purpose |
-|---|---|
-| `euler_scripts/create_env_autobrep.sh` | Clone AutoBrep, setup conda env, download checkpoints |
-| `euler_scripts/preprocess_step_to_parquet.py` | Convert STEP files → parquet (UV grids, bboxes, topology) |
-| `euler_scripts/train_lora_ar.py` | LoRA training (called by SLURM wrapper) |
-| `euler_scripts/sample_lora_ar.py` | Inference and STEP export (called by SLURM wrapper) |
-| `local_visualization/render_images2.py` | Render STEP → PNG (OpenCASCADE) |
-| `local_visualization/make_gifs3.py` | Create MP4 from PNG sequences |
+```
+euler_scripts/               # Euler HPC scripts & configs
+├── create_env_autobrep.sh
+├── *.slurm                 # Job wrappers (train, inference, preprocess)
+├── train_lora_ar.py        # Training script
+├── sample_lora_ar.py       # Inference script
+└── preprocess_step_to_parquet.py
+
+local_visualization/        # Local rendering tools
+├── render_images2.py       # STEP → PNG (OpenCASCADE)
+├── make_gifs3.py          # PNG sequence → MP4
+└── verify_parquet.py       # Data validation
+
+cloned_project/            # AutoBrep & BrepGen repos
+├── AutoBrep/
+└── BrepGen/
+
+report/                     # Thesis/documentation
+```
 
 ## Hyperparameter Tuning
 
-**For 100–500 samples:**
+**Training defaults (adjust in SLURM wrapper):**
 - **Learning rate:** 1e-4 (too high → overfitting, too low → slow learning)
-- **Epochs:** 30–50 (monitor W&B loss, should plateau ~0.8–1.0, not collapse to 0)
-- **LoRA r:** 8 for 100–500 samples; increase to 16 for >1k samples
-- **Inference temp:** 1.0 default; lower to 0.8–0.9 if too diverse
+- **Epochs:** 5
+- **Batch size:** 4
+- **LoRA r:** 32
 
-**Low success rate (<50%)?** Check training loss (should not be near 0), try lower temperature (0.9) and threshold (0.90).
+**Inference defaults (adjust in SLURM wrapper):**
+- **Num samples:** 10 (increase for more diverse outputs)
+- **Temperature:** 0.5 (lower = more deterministic, higher = more random)
+- **Complexity:** 17 (14=easy, 15=medium, 16=hard, 17=random)
+- **Sample batch size:** 10 (reduce if OOM)
 
-## File Locations (Euler)
+**Monitoring:** Check W&B loss curve—should plateau around 0.8–1.0, not collapse to 0 (indicates overfitting).
 
-- `$SCRATCH/AutoBrep/core/` — AutoBrep source
-- `$SCRATCH/AutoBrep/ckpt/` — Pretrained checkpoints
-- `$SCRATCH/AutoBrep/data/parquet/` — Training dataset
-- `$SCRATCH/AutoBrep/checkpoints/` — Trained LoRA adapters
-- `$SCRATCH/AutoBrep/lora_samples/` — Generated STEP files
+**Low success rate (<50%)?** Check training loss plateaued above 0, increase epochs, lower learning rate.
+
+## Euler File Locations
+
+**Data pipeline on Euler:**
+- `$SCRATCH/AutoBrep/data/step/` — ⬅️ **ADD YOUR STEP FILES HERE** (before preprocessing)
+- `$SCRATCH/AutoBrep/data/parquet/` — Preprocessed dataset (train/ and val/)
+- `$SCRATCH/AutoBrep/ckpt/` — Pretrained base checkpoints
+- `$SCRATCH/AutoBrep/checkpoints/` — LoRA adapters (timestamped by training script)
+- `$SCRATCH/AutoBrep/lora_samples/` — Generated STEP files & logs
 
 ## Important Notes
 
-- Use explicit Python path in SLURM (no `conda activate`)
-- W&B logging enabled by default; track at https://wandb.ai/slochmann-ethz/lora-autobrep
+- **STEP file location:** Copy your training STEP files to `$SCRATCH/AutoBrep/data/step/` after environment setup but **before** running preprocessing
+- Use explicit Python path in SLURM jobs (no `conda activate`)
+- **W&B samples:** Samples are generated and logged to W&B during training; view at https://wandb.ai/slochmann-ethz/lora-autobrep (inference job is optional for additional samples)
 - Success rate = % of generated samples that form valid STEP files
 - Chain jobs with SLURM dependencies: `sbatch --dependency=afterok:$JOB_ID euler_scripts/run_inference_lora_autobrep.slurm`
 
@@ -74,7 +105,7 @@ python local_visualization/make_gifs3.py
 
 | Issue | Fix |
 |---|---|
-| Success rate ~5% | Retrain with lower LR (1e-4), check loss doesn't collapse to 0 |
-| OOM during training | Reduce `--batch_size` or set `PYTORCH_ALLOC_CONF=expandable_segments:True` |
+| Success rate <80% | Check training loss didn't collapse to 0 (overfitting); increase epochs or reduce batch size |
+| OOM during training | Reduce `--batch_size` (default 2) or set `PYTORCH_ALLOC_CONF=expandable_segments:True` |
 | Checkpoints not found | Run `download_autobrep_ckpt.slurm` first |
-| Loss not decreasing | Lower LR to 5e-4 briefly to verify gradients, check dataset format |
+| Loss not decreasing | Verify learning rate is appropriate (default 1e-4), check dataset format |
