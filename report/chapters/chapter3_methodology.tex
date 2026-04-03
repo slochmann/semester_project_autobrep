@@ -47,9 +47,9 @@ The AutoBrep model processes token sequences where each token's embedding has di
 Adapters are inserted in parallel to the frozen, pre-trained weights of the Query (\texttt{to\_q}) and Value (\texttt{to\_v}) projection modules within each of the 35 transformer layers:
 \[
 \begin{array}{ll}
-\text{Original:} & \mathbf{z}_q = \mathbf{W}_q \mathbf{x} \\
-\text{With LoRA:} & \mathbf{z}_q = \underbrace{\mathbf{W}_q \mathbf{x}}_{\text{frozen}} + \underbrace{\mathbf{B} \mathbf{A} \mathbf{x}}_{\text{adapter}} \\
-\text{where:} & \mathbf{A} \in \mathbb{R}^{r \times 768},\ \mathbf{B} \in \mathbb{R}^{768 \times r},\ r \ll 768
+\text{Original:} & \mathbf{z}_q = \mathbf{W}_q \cdot \mathbf{x} \\
+\text{With LoRA:} & \mathbf{z}_q = \underbrace{\mathbf{x} \cdot \mathbf{W}_q }_{\text{frozen}} +  \underbrace{\frac{\alpha}{r} \cdot \mathbf{x} \cdot \mathbf{B} \cdot \mathbf{A} }_{\text{adapter}} \\
+\text{where:} & \mathbf{A} \in \mathbb{R}^{r \times 768},\ \mathbf{B} \in \mathbb{R}^{768 \times r}, r \in \{4, 8, 16\}
 \end{array}
 \]
 
@@ -58,7 +58,7 @@ Adapters are inserted in parallel to the frozen, pre-trained weights of the Quer
 \textbf{Configuration Parameters:}
 \begin{itemize}
 	\item \textbf{LoRA Rank} ($r$): Controls capacity--memory tradeoff; typical values $r \in \{4, 8, 16\}$
-	\item \textbf{LoRA Alpha} ($\alpha$): Scaling factor for adapter output; effective scale $= \alpha/r$
+	\item \textbf{LoRA Alpha} ($\alpha$): Scaling factor for adapter output; effective scale $= \alpha/r$; typical ratios \{1,2,3,4\}, higher ratios give more weight to adapter
 	\item \textbf{Target Layers}: Applied to query and value projection layers only (not key or output projections)
 	\item \textbf{Number of Layers}: 35 transformer layers, 2 adapter modules per layer (to\_q and to\_v)
 \end{itemize}
@@ -73,7 +73,7 @@ With rank $r=4$, each adapter pair $(\mathbf{A}, \mathbf{B})$ adds $4 \times 768
 \text{Total trainable params} = 35 \times 2 \times 6,144 = \mathbf{430,080} \text{ parameters}
 \]
 
-This represents only $\sim$0.001\% of the total model size ($\sim$435 million parameters in AutoBrep). In contrast, the full \texttt{to\_q} and \texttt{to\_v} projections contain $2 \times 35 \times 768^2 \approx 41.9$ million parameters, demonstrating the dramatic parameter efficiency of LoRA fine-tuning.
+This represents only $\sim$0.05\% of the total model size ($\sim$1B parameters in AutoBrep). In contrast, the full \texttt{to\_q} and \texttt{to\_v} projections contain $2 \times 35 \times 768^2 \approx 41.9$ million parameters, demonstrating the dramatic parameter efficiency of LoRA fine-tuning.
 
 %===============================================================
 \subsection{Data Preparation Pipeline}
