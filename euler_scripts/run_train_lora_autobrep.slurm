@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=600_cylinders
-#SBATCH --time=00:45:00
+#SBATCH --job-name=600_cubes
+#SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G                   # Total 32G
@@ -75,13 +75,14 @@ echo "Starting LoRA Fine-Tuning..."
     --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
     --batch_size 4 \
-    --num_epochs 5 \
+    --num_epochs 4 \
     --learning_rate 5e-5 \
-    --sample_temperature 0.3 \
-    --sample_complexity 15 \
+    --sample_temperature 0.4 \
+    --sample_complexity 17 \
     --sample_interval_epochs 1 \
-    --lora_r 16 \
-    --lora_alpha 32 \
+    --sample_interval_batches 65 \
+    --lora_r 32 \
+    --lora_alpha 128 \
     --wandb_project "lora-autobrep" \
     --wandb_entity "slochmann-ethz"
 # complexity: 14=easy, 15=medium, 16=hard, 17=random/uncond

@@ -1,6 +1,6 @@
 import argparse
 import os
-import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -94,6 +94,12 @@ def parse_args():
         type=int,
         default=1,
         help="Interval (in epochs) to run inference sampling",
+    )
+    parser.add_argument(
+        "--sample_interval_batches",
+        type=int,
+        default=0,
+        help="Interval (in batches) to run inference sampling within epochs (0=disabled)",
     )
     parser.add_argument(
         "--num_samples_to_generate",
@@ -485,6 +491,27 @@ def train_lora(
             if batch_idx % 10 == 0:
                 torch.cuda.empty_cache()
 
+            # Periodic batch-level sampling during epoch
+            if (
+                args is not None
+                and args.sample_interval_batches > 0
+                and (batch_idx + 1) % args.sample_interval_batches == 0
+            ):
+                sample_during_training(
+                    model=model,
+                    device=device,
+                    surface_fsq=surface_fsq,
+                    edge_fsq=edge_fsq,
+                    args=args,
+                    step_num=global_step,
+                    epoch=epoch + 1,
+                    output_dir=output_dir,
+                    wandb_run=wandb_run,
+                )
+                # Resume training mode after sampling
+                model_lora.train()
+                model.cad_gpt.train()
+
             if (batch_idx + 1) % 5 == 0:
                 avg_loss = epoch_loss / num_batches
                 lr = optimizer.param_groups[0]["lr"]
@@ -576,9 +603,9 @@ def main():
     torch.manual_seed(args.seed)
 
     # Initialize wandb
-    timestamp = int(time.time())
+    timestamp = datetime.now().strftime("%d.%m.%H:%M:%S")
     # Create a descriptive run name using hyperparameters
-    run_name = f"{job_name}_T{args.sample_temperature}_comp{args.sample_complexity}_lr{args.learning_rate}_r{args.lora_r}_a{args.lora_alpha}_{timestamp}"
+    run_name = f"{job_name}_T{args.sample_temperature}_comp{args.sample_complexity}_lr{args.learning_rate}_e{args.num_epochs}_r{args.lora_r}_a{args.lora_alpha}_{timestamp}"
     if args.track:
         wandb.init(
             project=args.wandb_project,
