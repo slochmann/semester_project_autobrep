@@ -1,21 +1,16 @@
 import argparse
 import io
-import os
+import warnings
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from tqdm import tqdm
-
-from OCC.Core.STEPControl import STEPControl_Reader
 from occwl.io import load_step
 from occwl.uvgrid import ugrid, uvgrid
-from occwl.solid import Solid
-from occwl.shell import Shell
-from occwl.compound import Compound
-from occwl.entity_mapper import EntityMapper
+from tqdm import tqdm
 
-import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
+
 
 # Copy of AutoBrep serialization functions (autobrep.data.serialize)
 def serialize_array(array: np.ndarray) -> bytes:
@@ -23,6 +18,7 @@ def serialize_array(array: np.ndarray) -> bytes:
     memfile = io.BytesIO()
     np.save(memfile, array)
     return memfile.getvalue()
+
 
 def deserialize_array(serialized: bytes) -> np.ndarray:
     """Deserialize bytes back to numpy array."""
@@ -42,8 +38,6 @@ def extract_brep_features(solids, filename=""):
         num_faces, num_edges: counts
     """
     try:
-        from occwl.compound import Compound
-        from occwl.shell import Shell
         from occwl.entity_mapper import EntityMapper
 
         # Handle both single solid and list of solids
@@ -83,7 +77,9 @@ def extract_brep_features(solids, filename=""):
                         for face in solid.faces():
                             try:
                                 face_idx = mapper.face_index(face)
-                                points = uvgrid(face, method="point", num_u=32, num_v=32)  # AutoBrep: 32x32
+                                points = uvgrid(
+                                    face, method="point", num_u=32, num_v=32
+                                )  # AutoBrep: 32x32
                                 if points is not None and len(points) > 0:
                                     solid_faces[face_idx] = points
                             except:
@@ -94,7 +90,9 @@ def extract_brep_features(solids, filename=""):
                     try:
                         for face_idx, face in enumerate(solid.faces()):
                             try:
-                                points = uvgrid(face, method="point", num_u=32, num_v=32)  # AutoBrep: 32x32
+                                points = uvgrid(
+                                    face, method="point", num_u=32, num_v=32
+                                )  # AutoBrep: 32x32
                                 if points is not None and len(points) > 0:
                                     solid_faces[face_idx] = points
                             except:
@@ -105,15 +103,22 @@ def extract_brep_features(solids, filename=""):
                                         edge_pts_list = []
                                         for edge in edges_of_face:
                                             try:
-                                                edge_pts = ugrid(edge, method="point", num_u=16)
+                                                edge_pts = ugrid(
+                                                    edge, method="point", num_u=16
+                                                )
                                                 if edge_pts is not None:
                                                     edge_pts_list.append(edge_pts)
                                             except:
                                                 continue
                                         if edge_pts_list:
-                                            combined = np.concatenate([pts for pts in edge_pts_list], axis=0)
+                                            combined = np.concatenate(
+                                                [pts for pts in edge_pts_list], axis=0
+                                            )
                                             if len(combined) >= 32:
-                                                points = np.tile(combined[:32].reshape(32, 1, 3), (1, 32, 1))
+                                                points = np.tile(
+                                                    combined[:32].reshape(32, 1, 3),
+                                                    (1, 32, 1),
+                                                )
                                                 solid_faces[face_idx] = points
                                 except:
                                     pass
@@ -134,17 +139,23 @@ def extract_brep_features(solids, filename=""):
                                 if len(connected_faces) != 2:
                                     continue
                                 try:
-                                    if edge.seam(connected_faces[0]) or edge.seam(connected_faces[1]):
+                                    if edge.seam(connected_faces[0]) or edge.seam(
+                                        connected_faces[1]
+                                    ):
                                         continue
                                 except:
                                     pass
 
-                                left_face, right_face = edge.find_left_and_right_faces(connected_faces)
+                                left_face, right_face = edge.find_left_and_right_faces(
+                                    connected_faces
+                                )
                                 if left_face is None or right_face is None:
                                     continue
 
                                 edge_idx = mapper.edge_index(edge)
-                                points = ugrid(edge, method="point", num_u=32)  # AutoBrep: 32 points
+                                points = ugrid(
+                                    edge, method="point", num_u=32
+                                )  # AutoBrep: 32 points
                                 if points is not None and len(points) > 0:
                                     solid_edges[edge_idx] = points
                                     left_idx = mapper.face_index(left_face)
@@ -164,12 +175,16 @@ def extract_brep_features(solids, filename=""):
                                 if len(connected_faces) != 2:
                                     continue
                                 try:
-                                    if edge.seam(connected_faces[0]) or edge.seam(connected_faces[1]):
+                                    if edge.seam(connected_faces[0]) or edge.seam(
+                                        connected_faces[1]
+                                    ):
                                         continue
                                 except:
                                     pass
 
-                                points = ugrid(edge, method="point", num_u=32)  # AutoBrep: 32 points
+                                points = ugrid(
+                                    edge, method="point", num_u=32
+                                )  # AutoBrep: 32 points
                                 if points is not None and len(points) > 0:
                                     solid_edges[edge_idx] = points
                             except:
@@ -183,7 +198,10 @@ def extract_brep_features(solids, filename=""):
                 for edge_idx, points in solid_edges.items():
                     all_edges[edge_offset + edge_idx] = points
                 for edge_idx, (left_idx, right_idx) in solid_incidence.items():
-                    all_incidence[edge_offset + edge_idx] = [face_offset + left_idx, face_offset + right_idx]
+                    all_incidence[edge_offset + edge_idx] = [
+                        face_offset + left_idx,
+                        face_offset + right_idx,
+                    ]
 
                 face_offset += len(solid_faces)
                 edge_offset += len(solid_edges)
@@ -195,8 +213,12 @@ def extract_brep_features(solids, filename=""):
             return None, None, None, 0, 0
 
         # Stack face and edge points
-        face_pts = np.stack([all_faces[i] for i in sorted(all_faces.keys())], axis=0)  # (F, 32, 32, 3)
-        edge_pts = np.stack([all_edges[i] for i in sorted(all_edges.keys())], axis=0)  # (E, 32, 3)
+        face_pts = np.stack(
+            [all_faces[i] for i in sorted(all_faces.keys())], axis=0
+        )  # (F, 32, 32, 3)
+        edge_pts = np.stack(
+            [all_edges[i] for i in sorted(all_edges.keys())], axis=0
+        )  # (E, 32, 3)
 
         num_faces = len(all_faces)
         num_edges = len(all_edges)
@@ -205,6 +227,7 @@ def extract_brep_features(solids, filename=""):
 
     except Exception:
         return None, None, None, 0, 0
+
 
 def compute_bboxes(face_pts, edge_pts):
     """
@@ -232,7 +255,10 @@ def compute_bboxes(face_pts, edge_pts):
         max_pt = np.max(edge, axis=0)
         edge_bboxes.append(np.concatenate([min_pt, max_pt]))
 
-    return np.array(face_bboxes, dtype=np.float32), np.array(edge_bboxes, dtype=np.float32)
+    return np.array(face_bboxes, dtype=np.float32), np.array(
+        edge_bboxes, dtype=np.float32
+    )
+
 
 def normalize_geometry(face_pts, edge_pts):
     """
@@ -247,10 +273,9 @@ def normalize_geometry(face_pts, edge_pts):
         face_pts_norm, edge_pts_norm: Normalized points in [-1, 1]
     """
     # Combine all points to compute global bounding box
-    all_points = np.concatenate([
-        face_pts.reshape(-1, 3),
-        edge_pts.reshape(-1, 3)
-    ], axis=0)
+    all_points = np.concatenate(
+        [face_pts.reshape(-1, 3), edge_pts.reshape(-1, 3)], axis=0
+    )
 
     # Global normalization to [-1, 1]
     min_vals = np.min(all_points, axis=0)
@@ -261,10 +286,13 @@ def normalize_geometry(face_pts, edge_pts):
     if global_scale == 0:
         return face_pts, edge_pts
 
-    face_pts_norm = (face_pts - global_center[np.newaxis, np.newaxis, np.newaxis, :]) / global_scale
+    face_pts_norm = (
+        face_pts - global_center[np.newaxis, np.newaxis, np.newaxis, :]
+    ) / global_scale
     edge_pts_norm = (edge_pts - global_center[np.newaxis, np.newaxis, :]) / global_scale
 
     return face_pts_norm.astype(np.float32), edge_pts_norm.astype(np.float32)
+
 
 def build_face_edge_incidence(num_faces, num_edges, edgeFace_IncM):
     """
@@ -289,6 +317,7 @@ def build_face_edge_incidence(num_faces, num_edges, edgeFace_IncM):
 
     return incidence
 
+
 def process_step_file(step_path, verbose=False):
     """Process a single STEP file and extract B-Rep geometry."""
     try:
@@ -305,22 +334,32 @@ def process_step_file(step_path, verbose=False):
         if len(filtered_solids) == 0:
             solids_to_process = cad_solids
             if verbose:
-                print(f"  ⚠️  {step_path.name}: All {len(cad_solids)} solids exceed 30 faces, using all")
+                print(
+                    f"  ⚠️  {step_path.name}: All {len(cad_solids)} solids exceed 30 faces, using all"
+                )
         else:
             solids_to_process = filtered_solids
             if verbose and len(filtered_solids) < len(cad_solids):
-                print(f"  ℹ️  {step_path.name}: {len(cad_solids)} solids -> filtered to {len(filtered_solids)} (<=30 faces)")
+                print(
+                    f"  ℹ️  {step_path.name}: {len(cad_solids)} solids -> filtered to {len(filtered_solids)} (<=30 faces)"
+                )
 
         if verbose and len(cad_solids) > 1:
             total_faces = sum(len(list(s.faces())) for s in solids_to_process)
-            print(f"    Merging {len(solids_to_process)} solids (~{total_faces} total faces)")
+            print(
+                f"    Merging {len(solids_to_process)} solids (~{total_faces} total faces)"
+            )
 
         # Extract B-rep features
-        face_pts, edge_pts, edgeFace_IncM, num_faces, num_edges = extract_brep_features(solids_to_process, step_path.name)
+        face_pts, edge_pts, edgeFace_IncM, num_faces, num_edges = extract_brep_features(
+            solids_to_process, step_path.name
+        )
 
         if face_pts is None or num_faces < 1 or num_edges < 1:
             if verbose:
-                print(f"  ❌ {step_path.name}: Insufficient geometry (faces={num_faces}, edges={num_edges})")
+                print(
+                    f"  ❌ {step_path.name}: Insufficient geometry (faces={num_faces}, edges={num_edges})"
+                )
             return None
 
         # Normalize to [-1, 1]
@@ -330,29 +369,51 @@ def process_step_file(step_path, verbose=False):
         face_bboxes, edge_bboxes = compute_bboxes(face_pts_norm, edge_pts_norm)
 
         # Build face-edge incidence matrix
-        face_edge_incidence = build_face_edge_incidence(num_faces, num_edges, edgeFace_IncM)
+        face_edge_incidence = build_face_edge_incidence(
+            num_faces, num_edges, edgeFace_IncM
+        )
 
         return {
-            'face_points_normalized': serialize_array(face_pts_norm),
-            'edge_points_normalized': serialize_array(edge_pts_norm),
-            'face_bbox_world': serialize_array(face_bboxes),
-            'edge_bbox_world': serialize_array(edge_bboxes),
-            'face_edge_incidence': serialize_array(face_edge_incidence),
-            'num_faces_after_splitting': num_faces,
-            'scaled_unique': True,
-            'filename': step_path.name,
+            "face_points_normalized": serialize_array(face_pts_norm),
+            "edge_points_normalized": serialize_array(edge_pts_norm),
+            "face_bbox_world": serialize_array(face_bboxes),
+            "edge_bbox_world": serialize_array(edge_bboxes),
+            "face_edge_incidence": serialize_array(face_edge_incidence),
+            "num_faces_after_splitting": num_faces,
+            "scaled_unique": True,
+            "filename": step_path.name,
         }
     except Exception as e:
         if verbose:
             print(f"  ❌ {step_path.name}: {type(e).__name__}: {str(e)[:100]}")
         return None
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess STEP files to AutoBrep Parquet format with train/val split")
-    parser.add_argument("--input_dir", type=str, required=True, help="Directory containing input STEP files")
-    parser.add_argument("--output_dir", type=str, required=True, help="Output directory (will create train/ and val/ subdirs)")
-    parser.add_argument("--train_val_split", type=float, default=0.8, help="Fraction of data for training (default: 0.8)")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducible split")
+    parser = argparse.ArgumentParser(
+        description="Preprocess STEP files to AutoBrep Parquet format with train/val split"
+    )
+    parser.add_argument(
+        "--input_dir",
+        type=str,
+        required=True,
+        help="Directory containing input STEP files",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        required=True,
+        help="Output directory (will create train/ and val/ subdirs)",
+    )
+    parser.add_argument(
+        "--train_val_split",
+        type=float,
+        default=0.8,
+        help="Fraction of data for training (default: 0.8)",
+    )
+    parser.add_argument(
+        "--seed", type=int, default=42, help="Random seed for reproducible split"
+    )
     args = parser.parse_args()
 
     step_dir = Path(args.input_dir)
@@ -365,11 +426,13 @@ def main():
 
     print(f"Input STEP files: {step_dir}")
     print(f"Output directory: {output_dir}")
-    print(f"Train/Val split: {args.train_val_split:.1%} / {1 - args.train_val_split:.1%}")
+    print(
+        f"Train/Val split: {args.train_val_split:.1%} / {1 - args.train_val_split:.1%}"
+    )
 
     print("Processing STEP files to point clouds...\n")
 
-    step_files = list(step_dir.glob("*.step"))
+    step_files = list(step_dir.glob("*.step")) + list(step_dir.glob("*.stp"))
     print(f"Found {len(step_files)} STEP files\n")
 
     data_list = []
@@ -390,39 +453,40 @@ def main():
     # Create train/val split
     if data_list:
         df = pd.DataFrame(data_list)
-        
+
         # Shuffle and split
         rng = np.random.RandomState(args.seed)
         indices = rng.permutation(len(df))
         split_idx = int(len(df) * args.train_val_split)
-        
+
         train_indices = indices[:split_idx]
         val_indices = indices[split_idx:]
-        
+
         df_train = df.iloc[train_indices].reset_index(drop=True)
         df_val = df.iloc[val_indices].reset_index(drop=True)
-        
+
         # Save train split
         train_file = train_dir / "data.parquet"
-        df_train.to_parquet(train_file, engine='pyarrow', index=False)
+        df_train.to_parquet(train_file, engine="pyarrow", index=False)
         print(f"\n✅ Saved {len(df_train)} training samples to {train_file}")
         print(f"   Size: {train_file.stat().st_size / 1e6:.1f} MB")
-        
+
         # Save val split
         val_file = val_dir / "data.parquet"
-        df_val.to_parquet(val_file, engine='pyarrow', index=False)
+        df_val.to_parquet(val_file, engine="pyarrow", index=False)
         print(f"\n✅ Saved {len(df_val)} validation samples to {val_file}")
         print(f"   Size: {val_file.stat().st_size / 1e6:.1f} MB")
-        
+
         # Verify
         df_train_check = pd.read_parquet(train_file)
         df_val_check = pd.read_parquet(val_file)
-        print(f"\n📊 Final dataset:")
+        print("\n📊 Final dataset:")
         print(f"   Train: {len(df_train_check)} samples")
         print(f"   Val:   {len(df_val_check)} samples")
         print(f"   Total: {len(df_train_check) + len(df_val_check)} samples")
     else:
         print("❌ No valid samples to save")
+
 
 if __name__ == "__main__":
     main()

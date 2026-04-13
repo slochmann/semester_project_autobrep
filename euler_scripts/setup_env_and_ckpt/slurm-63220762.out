@@ -1,0 +1,165 @@
+Loading HPC modules...
+Many modules are hidden in this stack. Use "module --show_hidden spider SOFTWARE" if you are not able to find the required software
+
+The following have been reloaded with a version change:
+  1) cuda/12.1.1 => cuda/12.8.0
+
+Miniconda already installed at /cluster/home/slochmann/miniconda3
+
+==== Cloning repositories into /cluster/scratch/slochmann ====
+Directory /cluster/scratch/slochmann/AutoBrep already exists. Skipping clone.
+
+==== Creating Conda environment: autobrep ====
+Conda environment autobrep already exists. Skipping creation.
+
+==== Installing autobrep package into conda env ===
+Upgrading pytorch-lightning and lightning to Python 3.10-compatible versions...
+Requirement already satisfied: pytorch-lightning>=2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (2.6.1)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3abb723b0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/pytorch-lightning/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3abb726b0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/pytorch-lightning/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3abb72860>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/pytorch-lightning/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3abb72a10>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/pytorch-lightning/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3abb72bc0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/pytorch-lightning/
+Requirement already satisfied: lightning>=2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (2.6.1)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9d32b0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9d34c0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9d3670>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9d3820>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9d39d0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning/
+Requirement already satisfied: lightning-fabric>=2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (2.6.1)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9f03a0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning-fabric/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9f0610>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning-fabric/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9f07c0>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning-fabric/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9f0970>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning-fabric/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x14b3ab9f0b20>: Failed to establish a new connection: [Errno 111] Connection refused')': /simple/lightning-fabric/
+Requirement already satisfied: torch>=2.1.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (2.10.0)
+Requirement already satisfied: tqdm>=4.57.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (4.67.3)
+Requirement already satisfied: PyYAML>5.4 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (6.0.3)
+Requirement already satisfied: fsspec>=2022.5.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (2026.2.0)
+Requirement already satisfied: torchmetrics>0.7.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (1.9.0)
+Requirement already satisfied: packaging>=23.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (26.0)
+Requirement already satisfied: typing-extensions>4.5.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (4.15.0)
+Requirement already satisfied: lightning-utilities>=0.10.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from pytorch-lightning>=2.0) (0.15.3)
+Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (3.13.3)
+Requirement already satisfied: filelock in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (3.25.2)
+Requirement already satisfied: sympy>=1.13.3 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (3.4.2)
+Requirement already satisfied: jinja2 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (3.1.6)
+Requirement already satisfied: cuda-bindings==12.9.4 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.9.4)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.8.93 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.93)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.8.90 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.90)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.8.90 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.90)
+Requirement already satisfied: nvidia-cudnn-cu12==9.10.2.21 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (9.10.2.21)
+Requirement already satisfied: nvidia-cublas-cu12==12.8.4.1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.4.1)
+Requirement already satisfied: nvidia-cufft-cu12==11.3.3.83 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (11.3.3.83)
+Requirement already satisfied: nvidia-curand-cu12==10.3.9.90 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (10.3.9.90)
+Requirement already satisfied: nvidia-cusolver-cu12==11.7.3.90 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (11.7.3.90)
+Requirement already satisfied: nvidia-cusparse-cu12==12.5.8.93 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.5.8.93)
+Requirement already satisfied: nvidia-cusparselt-cu12==0.7.1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (0.7.1)
+Requirement already satisfied: nvidia-nccl-cu12==2.27.5 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (2.27.5)
+Requirement already satisfied: nvidia-nvshmem-cu12==3.4.5 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (3.4.5)
+Requirement already satisfied: nvidia-nvtx-cu12==12.8.90 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.90)
+Requirement already satisfied: nvidia-nvjitlink-cu12==12.8.93 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (12.8.93)
+Requirement already satisfied: nvidia-cufile-cu12==1.13.1.3 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (1.13.1.3)
+Requirement already satisfied: triton==3.6.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torch>=2.1.0->pytorch-lightning>=2.0) (3.6.0)
+Requirement already satisfied: cuda-pathfinder~=1.1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from cuda-bindings==12.9.4->torch>=2.1.0->pytorch-lightning>=2.0) (1.4.2)
+Requirement already satisfied: numpy>1.20.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from torchmetrics>0.7.0->pytorch-lightning>=2.0) (2.2.6)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (2.6.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (1.4.0)
+Requirement already satisfied: async-timeout<6.0,>=4.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (5.0.1)
+Requirement already satisfied: attrs>=17.3.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (25.4.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (0.4.1)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (1.23.0)
+Requirement already satisfied: idna>=2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from yarl<2.0,>=1.17.0->aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]>=2022.5.0->pytorch-lightning>=2.0) (3.11)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from sympy>=1.13.3->torch>=2.1.0->pytorch-lightning>=2.0) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /cluster/home/slochmann/miniconda3/envs/autobrep/lib/python3.10/site-packages (from jinja2->torch>=2.1.0->pytorch-lightning>=2.0) (3.0.3)
+Ensuring setuptools/pkg_resources is intact...
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/terms.json
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/terms.json
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/terms.json
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/terms.json
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/terms.json
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/terms.json
+
+2 channel Terms of Service accepted
+Retrieving notices: - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/notices.json
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/notices.json
+
+\ | / - \ | / - \ | / - \ | / - \ | / - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/notices.json
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/notices.json
+
+\ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/notices.json
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/notices.json
+
+ERROR conda.notices.fetch:get_channel_notice_response(72): Request error <HTTPSConnectionPool(host='repo.anaconda.com', port=443): Max retries exceeded with url: /pkgs/main/notices.json (Caused by NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused"))> for channel: defaults url: https://repo.anaconda.com/pkgs/main/notices.json
+ERROR conda.notices.fetch:get_channel_notice_response(72): Request error <HTTPSConnectionPool(host='repo.anaconda.com', port=443): Max retries exceeded with url: /pkgs/r/notices.json (Caused by NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused"))> for channel: defaults url: https://repo.anaconda.com/pkgs/r/notices.json
+done
+Channels:
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): | Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/noarch/repodata.json.zst
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/noarch/repodata.json.zst
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/linux-64/repodata.json.zst
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/linux-64/repodata.json.zst
+
+/ - \ | / - \ | / - \ | / - \ | / - \ | Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/linux-64/repodata.json.zst
+
+/ - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/main/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='repo.anaconda.com', port=443): Failed to establish a new connection: [Errno 111] Connection refused")': /pkgs/r/linux-64/repodata.json.zst
+
+failed
+
+CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://repo.anaconda.com/pkgs/main/linux-64/repodata.json>
+Elapsed: -
+
+An HTTP error occurred when trying to retrieve this URL.
+HTTP errors are often intermittent, and a simple retry will get you on your way.
+
+If your current network has https://repo.anaconda.com blocked, please file
+a support request with your network engineering team.
+
+'https//repo.anaconda.com/pkgs/main/linux-64'
+
+
+Installing autobrep package...
+Obtaining file:///cluster/scratch/slochmann/AutoBrep/core
+ERROR: file:///cluster/scratch/slochmann/AutoBrep/core does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.
+Verifying environment...
+<string>:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+Environment OK
+WARNING: /cluster/scratch/slochmann/AutoBrep/configs/sample.json not found. Skipping patch.
+
+================================================================
+ Environment setup complete!
+ Conda environment: autobrep
+ Repositories have been cloned into: /cluster/scratch/slochmann
+
+ To re-activate the environment in future sessions, run:
+    conda activate autobrep
+ Then, navigate to the core directory:
+    cd "/cluster/scratch/slochmann/AutoBrep/core"
+================================================================

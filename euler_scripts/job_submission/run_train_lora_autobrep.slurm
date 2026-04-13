@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=600_cubes
+#SBATCH --job-name=pipe_flanges
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -11,8 +11,6 @@
 # Use SLURM job name; override with sbatch --job-name=autobrep_lora_train_<descriptor>
 NAME="${SLURM_JOB_NAME}"
 mkdir -p "$SCRATCH/logs"
-mkdir -p "$SCRATCH/datasets"
-mkdir -p "$SCRATCH/models"
 mkdir -p "$SCRATCH/AutoBrep/checkpoints/$NAME"
 
 #------------------------------------------------------------------------------
@@ -48,8 +46,6 @@ export WANDB_ENTITY="slochmann-ethz"
 #------------------------------------------------------------------------------
 # Set Hugging Face environment variables
 #------------------------------------------------------------------------------
-export HF_HOME="$SCRATCH/models"
-export HF_DATASETS_CACHE="$SCRATCH/datasets"
 export HF_TOKEN="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"
 
 #------------------------------------------------------------------------------
@@ -77,10 +73,10 @@ echo "Starting LoRA Fine-Tuning..."
     --batch_size 4 \
     --num_epochs 4 \
     --learning_rate 5e-5 \
-    --sample_temperature 0.4 \
+    --sample_temperature 0.6 \
     --sample_complexity 17 \
     --sample_interval_epochs 1 \
-    --sample_interval_batches 65 \
+    --sample_interval_batches 0 \
     --lora_r 32 \
     --lora_alpha 128 \
     --wandb_project "lora-autobrep" \

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=600_cylinders
+#SBATCH --job-name=pipe_flanges
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8

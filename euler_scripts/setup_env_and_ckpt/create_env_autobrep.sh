@@ -48,7 +48,7 @@ fi
 # Clone AutoBrep Repository
 #==============================================================================
 REPOS=(
-    "git@github.com:AutodeskAILab/AutoBrep.git"
+    "git@github.com:slochmann/AutoBrep.git"
 )
 PROJECTS_DIR="$SCRATCH"
 
@@ -97,13 +97,15 @@ PYTHON="$HOME/miniconda3/envs/$CONDA_ENV_NAME/bin/python"
 
 # Fix: dev-env.yaml installs an old pytorch_lightning/lightning_fabric that
 # uses collections.MutableMapping (removed in Python 3.10) and has broken
-# pkg_resources due to a vendored old pyparsing. Upgrade lightning to 2.x
-# which has all these fixes, then reinstall setuptools cleanly via conda.
-echo "Upgrading pytorch-lightning and lightning to Python 3.10-compatible versions..."
-"$PIP" install --upgrade "pytorch-lightning>=2.0" "lightning>=2.0" "lightning-fabric>=2.0"
-
+# pkg_resources due to a vendored old pyparsing. First ensure setuptools is
+# intact, then upgrade lightning packages to 2.x which has all these fixes.
 echo "Ensuring setuptools/pkg_resources is intact..."
 "$HOME/miniconda3/bin/conda" install -n "$CONDA_ENV_NAME" setuptools --force-reinstall -y
+echo "Reinstalling setuptools via pip to ensure pkg_resources is available..."
+"$PIP" install --force-reinstall --no-cache-dir setuptools
+
+echo "Upgrading pytorch-lightning and lightning to Python 3.10-compatible versions..."
+"$PIP" install --upgrade --force-reinstall --no-cache-dir "pytorch-lightning>=2.0" "lightning-fabric>=2.0" "lightning>=2.0"
 
 echo "Installing autobrep package..."
 "$PIP" install -e "$CORE_DIR"
