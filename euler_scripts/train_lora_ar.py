@@ -308,6 +308,24 @@ def sample_during_training(
                 try:
                     face_img = Image.open(face_img_path)
                     edge_img = Image.open(edge_img_path)
+
+                    # Downscale images to reduce memory/file size (60% of original)
+                    scale_factor = 0.6
+                    face_img = face_img.resize(
+                        (
+                            int(face_img.width * scale_factor),
+                            int(face_img.height * scale_factor),
+                        ),
+                        Image.Resampling.LANCZOS,
+                    )
+                    edge_img = edge_img.resize(
+                        (
+                            int(edge_img.width * scale_factor),
+                            int(edge_img.height * scale_factor),
+                        ),
+                        Image.Resampling.LANCZOS,
+                    )
+
                     # Concatenate horizontally
                     concat_img = Image.new(
                         "RGB",
@@ -363,8 +381,8 @@ def sample_during_training(
 
         # Log collage if available
         if collage is not None:
-            collage_path = sample_dir / "collage.png"
-            collage.save(collage_path)
+            collage_path = sample_dir / "collage.jpg"
+            collage.save(collage_path, format="JPEG", quality=70, optimize=True)
             log_dict["sampling/collage"] = wandb.Image(str(collage_path))
 
         wandb.log(log_dict, step=step_num)

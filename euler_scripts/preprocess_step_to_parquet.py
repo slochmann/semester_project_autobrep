@@ -432,7 +432,11 @@ def main():
 
     print("Processing STEP files to point clouds...\n")
 
-    step_files = list(step_dir.glob("*.step")) + list(step_dir.glob("*.stp"))
+    step_files = (
+        list(step_dir.glob("*.step"))
+        + list(step_dir.glob("*.stp"))
+        + list(step_dir.glob("*.STEP"))
+    )
     print(f"Found {len(step_files)} STEP files\n")
 
     data_list = []

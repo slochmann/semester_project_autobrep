@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=pipe_flanges
+#SBATCH --job-name=1_pipe
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -41,7 +41,7 @@ echo ""
 "$PYTHON" "$SCRIPT_PATH" \
     --input_dir "$INPUT_DIR" \
     --output_dir "$OUTPUT_DIR" \
-    --train_val_split 0.9 \
+    --train_val_split 1 \
     --seed 42
 
 echo ""
