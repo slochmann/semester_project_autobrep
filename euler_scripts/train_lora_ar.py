@@ -406,8 +406,14 @@ def validate(model, model_lora, val_dataloader, device):
 
             updated_tokens = torch.stack(updated_tokens).detach()
 
+            # Build cond_mask: ignore loss on first 4 tokens (BOS, BOM, complexity, EOM)
+            cond_mask = torch.zeros(
+                updated_tokens.shape[0], model.pad_len, dtype=torch.bool, device=device
+            )
+            cond_mask[:, :4] = True
+
             # Forward pass using model_lora
-            loss = model_lora(updated_tokens)
+            loss = model_lora(updated_tokens, cond_mask=cond_mask)
 
             val_loss += loss.item()
             num_batches += 1
@@ -470,9 +476,15 @@ def train_lora(
 
             updated_tokens = torch.stack(updated_tokens).detach()
 
+            # Build cond_mask: ignore loss on first 4 tokens (BOS, BOM, complexity, EOM)
+            cond_mask = torch.zeros(
+                updated_tokens.shape[0], model.pad_len, dtype=torch.bool, device=device
+            )
+            cond_mask[:, :4] = True
+
             # Forward pass - model computes loss internally using autoregressive wrapper
             # Pass full token sequence; ar_decoder handles shift internally
-            loss = model_lora(updated_tokens)
+            loss = model_lora(updated_tokens, cond_mask=cond_mask)
 
             optimizer.zero_grad()
             loss.backward()
@@ -485,6 +497,9 @@ def train_lora(
             epoch_loss += loss.item()
             num_batches += 1
             loss_history.append(loss.item())
+
+            # Capture step before incrementing for accurate logging
+            current_step = global_step
             global_step += 1
 
             # Clean up GPU cache to avoid memory fragmentation
@@ -503,7 +518,7 @@ def train_lora(
                     surface_fsq=surface_fsq,
                     edge_fsq=edge_fsq,
                     args=args,
-                    step_num=global_step,
+                    step_num=current_step,
                     epoch=epoch + 1,
                     output_dir=output_dir,
                     wandb_run=wandb_run,
@@ -521,14 +536,14 @@ def train_lora(
                     f"Loss: {avg_loss:.4f} | LR: {lr:.2e}"
                 )
 
-                # Log to wandb
+                # Log to wandb using captured step to avoid conflicts with async rendering
                 if wandb_run is not None:
                     wandb.log(
                         {
                             "loss": avg_loss,
                             "learning_rate": lr,
                         },
-                        step=global_step,
+                        step=current_step,
                     )
 
         avg_epoch_loss = epoch_loss / max(num_batches, 1)
@@ -647,7 +662,7 @@ def main():
     lora_config = LoraConfig(
         r=args.lora_r,
         lora_alpha=args.lora_alpha,
-        target_modules=["to_q", "to_v"],
+        target_modules=["to_q", "to_k", "to_v", "to_out"],
         lora_dropout=0.1,
         bias="none",
         modules_to_save=[],

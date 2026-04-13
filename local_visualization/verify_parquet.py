@@ -46,6 +46,8 @@ TOL = 1.0 / (2 ** (BIT - 1))  # ≈ 0.00195, minimum visible box size
 MAX_EDGE = 1000
 MIN_FACE = 2
 MAX_FACE = 200
+MAX_SEQ = 3000
+AUTOBREP_MAX_SEQ = 2500  # Default from autoregressive.py; longer seqs are truncated
 
 
 def autobrep_pre_filter(face_bbox, edge_bbox, face_edge_adj):
@@ -248,6 +250,22 @@ def check_sample(row, idx):
             "  scaled_unique=False (will be filtered out by AutoBrep data loader)"
         )
 
+    # ── Sequence length estimation ───────────────────────────────────────────
+    # Estimate seq_len from num_faces and num_edges (no explicit seq column)
+    # AutoBrep tokenization (from paper Section 5.1):
+    #   Per face: 6 bbox tokens [x0,y0,z0,x1,y1,z1] + 4 geometry tokens = 10 tokens
+    #   Per edge: 6 bbox tokens + 2 geometry tokens + 1 topology ref token = 9 tokens
+    #   Overhead: ~15 special tokens (start/end, BFT level markers)
+    estimated_seq_len = nf * 10 + ne * 9 + 15
+    stats["seq_len"] = estimated_seq_len
+    # NOTE: AutoBrep truncates long sequences during training (random context window)
+    # This doesn't cause errors, but loses geometry information (~loss of topology detail)
+    AUTOBREP_MAX_SEQ = 2500  # Default in autoregressive.py
+    if estimated_seq_len > AUTOBREP_MAX_SEQ:
+        issues.append(
+            f"  ⚠️  estimated seq length {estimated_seq_len} > {AUTOBREP_MAX_SEQ} (will be truncated during training; loses topology info)"
+        )
+
     return issues, stats
 
 
@@ -311,6 +329,9 @@ def plot_sample(row, sample_idx, title=""):
         fig = plt.figure(figsize=(16, 12))
         fig.suptitle(f"Sample {sample_idx}  {title}", fontsize=14, fontweight="bold")
         ax = fig.add_subplot(111, projection="3d")
+
+        # Store filename for later use
+        filename_for_path = title
 
         # Colormap for faces
         cmap = plt.get_cmap("tab20")
@@ -425,7 +446,12 @@ def plot_sample(row, sample_idx, title=""):
         )
 
         plt.tight_layout()
-        out_path = Path(f"parquet_sample_{sample_idx:03d}.png")
+        # Use filename for output path, remove file extension
+        if filename_for_path:
+            safe_name = Path(filename_for_path).stem
+            out_path = Path(f"parquet_sample_{safe_name}.png")
+        else:
+            out_path = Path(f"parquet_sample_{sample_idx:03d}.png")
         plt.savefig(out_path, dpi=300, bbox_inches="tight")
         print(f"  Plot saved: {out_path}")
         plt.close(fig)
@@ -483,6 +509,38 @@ def print_dataset_stats(df):
     if "filename" in df.columns:
         print(f"\n  Filenames (first 5): {df['filename'].head(5).tolist()}")
 
+    # Sequence length stats (estimated from face/edge counts)
+    seq_lens = []
+    for idx, row in df.iterrows():
+        try:
+            nf = row.get("num_faces_after_splitting", None)
+            if nf is None:
+                continue
+            # Quick estimate: count edges from the deserialized adjacency matrix
+            try:
+                adj = deserialize(row["face_edge_incidence"])
+                ne = adj.shape[1] if adj.ndim >= 2 else 0
+            except:
+                ne = 0
+            estimated_len = int(nf) * 4 + ne * 2 + 150
+            seq_lens.append(estimated_len)  # nf*10 + ne*9 + 15
+        except:
+            pass
+
+    if seq_lens:
+        seq_lens = np.array(seq_lens)
+        print(
+            f"\n  estimated seq lengths (from face/edge counts): min={seq_lens.min()}, max={seq_lens.max()}, "
+            f"mean={seq_lens.mean():.1f}, median={np.median(seq_lens):.0f}"
+        )
+        n_exceeds = (seq_lens > MAX_SEQ).sum()
+        if n_exceeds:
+            print(
+                f"    ⚠️  {n_exceeds}/{len(seq_lens)} sequences estimated to exceed MAX_SEQ={MAX_SEQ} (will cause training errors)"
+            )
+    else:
+        print("\n  seq lengths: (could not estimate from face/edge counts)")
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Main
@@ -535,6 +593,7 @@ def main():
 
     n_pass = 0
     n_fail = 0
+    fail_reasons = {}  # Track failure reasons
 
     for i, row_idx in enumerate(indices):
         row = df.iloc[row_idx]
@@ -549,12 +608,13 @@ def main():
         status = "✅" if not issues else "❌"
         nf = stats.get("num_faces", "?")
         ne = stats.get("num_edges", "?")
+        seq_len = stats.get("seq_len", "?")
         f_range = stats.get("face_pts_range", ("?", "?"))
         e_range = stats.get("edge_pts_range", ("?", "?"))
         filt = stats.get("autobrep_filter", (None, ""))
 
         print(
-            f"\n  [{i + 1}/{n}] {status} {fname} | faces={nf}, edges={ne} | "
+            f"\n  [{i + 1}/{n}] {status} {fname} | faces={nf}, edges={ne}, seq_len={seq_len} | "
             f"pts_range=[{f_range[0]:.3f}, {f_range[1]:.3f}] | filter={filt[1]}"
         )
 
@@ -567,6 +627,36 @@ def main():
 
         for issue in issues:
             print(f"         ⚠️  {issue}")
+
+        # Check if this sample has an autobrep topology failure
+        has_autobrep_failure = any("AutoBrep pre_filter FAIL" in i for i in issues)
+
+        # Categorize failure reasons (skip seq_length if topology already failed)
+        for issue in issues:
+            # Don't double-count: if topology failed, skip seq_length failure
+            if "seq length" in issue and "exceeds" in issue:
+                if has_autobrep_failure:
+                    continue  # Skip counting seq failure if topology already failed
+                key = "seq_length_exceeded"
+            elif "AutoBrep pre_filter FAIL" in issue:
+                key = "autobrep_filter"
+            elif "shape" in issue.lower():
+                key = "shape_mismatch"
+            elif "dtype" in issue.lower():
+                key = "dtype_error"
+            elif "out of [-1,1]" in issue:
+                key = "out_of_range"
+            elif "bbox mismatch" in issue:
+                key = "bbox_mismatch"
+            elif "point cloud" in issue.lower():
+                key = "global_range_error"
+            elif "scaled_unique" in issue:
+                key = "scaled_unique_false"
+            elif "num_faces_after_splitting" in issue:
+                key = "face_count_mismatch"
+            else:
+                key = "other"
+            fail_reasons[key] = fail_reasons.get(key, 0) + 1
 
         if not issues:
             n_pass += 1
@@ -582,13 +672,42 @@ def main():
     print(f"{'=' * 60}")
 
     # ── Summary of what AutoBrep will actually see ────────────────────────
-    print("\n  AutoBrep data loader simulation:")
+    print("\n  AutoBrep data loader restrictions (checked above):")
     print(f"  - min_face={MIN_FACE}, max_face={MAX_FACE}, max_edge={MAX_EDGE}")
+    print(f"  - max_seq={AUTOBREP_MAX_SEQ} (token limit for training)")
+    print("    [seq_len is estimated as: num_faces*10 + num_edges*9 + 15]")
+    print("    [⚠️  If seq_len > max_seq: sequence is TRUNCATED (random context window)]")
+    print("    [This loses topology detail, but doesn't cause errors]")
     print("  - scaled_unique filter: expects True")
     print(f"  - bit={BIT} → TOL={TOL:.5f} (minimum bbox size)")
-    print("  - 90% of samples with <25 faces are dropped during training (normal!)")
+    print("  - Faces/edges must be manifold (each edge shared by exactly 2 faces)")
+    print("  - All points normalized to [-1, 1]")
+
+    # Print failure breakdown by constraint
+    if fail_reasons:
+        print("\n  Failures by constraint:")
+        constraint_map = {
+            "seq_length_exceeded": f"max_seq={MAX_SEQ}",
+            "autobrep_filter": "Manifold/topology checks",
+            "shape_mismatch": "Geometry shape (F,32,32,3) / (E,32,3)",
+            "dtype_error": "Data type (must be float32)",
+            "out_of_range": "Value range [-1, 1]",
+            "bbox_mismatch": "Bbox vs actual point extent",
+            "global_range_error": "Global point cloud [-1, 1]",
+            "scaled_unique_false": "scaled_unique must be True",
+            "face_count_mismatch": "Face count metadata",
+            "other": "Other errors",
+        }
+        for reason, count in sorted(fail_reasons.items(), key=lambda x: -x[1]):
+            constraint_name = constraint_map.get(
+                reason, reason.replace("_", " ").title()
+            )
+            print(f"    - {constraint_name}: {count}")
+    else:
+        print("\n  ✅ All checked samples passed all constraints!")
+
     print(
-        "  - Valid rows available to loader won't be visible until actual training run\n"
+        "\n  Note: Valid rows available to loader won't be visible until actual training run\n"
     )
 
 
