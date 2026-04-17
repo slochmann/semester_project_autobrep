@@ -132,6 +132,20 @@ def parse_args():
         help="Complexity token (14=easy, 15=medium, 16=hard, 17=random)",
     )
 
+    # Validation frequency
+    parser.add_argument(
+        "--val_interval_epochs",
+        type=int,
+        default=0,
+        help="Interval (in epochs) to run validation",
+    )
+    parser.add_argument(
+        "--val_interval_batches",
+        type=int,
+        default=30,
+        help="Interval (in batches) to run validation within epochs (0=disabled)",
+    )
+
     return parser.parse_args()
 
 
@@ -355,17 +369,26 @@ def sample_during_training(
         grid_rows = 6  # 6 rows for 24 samples
 
         if num_samples > 0:
-            # Get image dimensions from first sample
-            img_width = sample_images_list[0].width
-            img_height = sample_images_list[0].height
+            # Resize images to 50% of original size
+            resize_scale = 0.25
+            resized_images = []
+            for img in sample_images_list:
+                new_width = int(img.width * resize_scale)
+                new_height = int(img.height * resize_scale)
+                resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                resized_images.append(resized_img)
+
+            # Get image dimensions from first resized sample
+            img_width = resized_images[0].width
+            img_height = resized_images[0].height
 
             # Create collage canvas
             collage_width = img_width * grid_cols
             collage_height = img_height * grid_rows
             collage = Image.new("RGB", (collage_width, collage_height))
 
-            # Paste images into grid
-            for idx, img in enumerate(sample_images_list):
+            # Paste resized images into grid
+            for idx, img in enumerate(resized_images):
                 row = idx // grid_cols
                 col = idx % grid_cols
                 x = col * img_width
@@ -470,6 +493,13 @@ def train_lora(
     print("STARTING LORA FINE-TUNING")
     print("=" * 80)
 
+    # Run initial validation before training
+    print("\n📊 Running initial validation...")
+    initial_val_loss = validate(model, model_lora, val_dataloader, device)
+    print(f"   Initial Validation Loss: {initial_val_loss:.4f}\n")
+    if wandb_run is not None:
+        wandb.log({"val_loss": initial_val_loss}, step=0)
+
     for epoch in range(num_epochs):
         epoch_loss = 0.0
         num_batches = 0
@@ -524,6 +554,21 @@ def train_lora(
             if batch_idx % 10 == 0:
                 torch.cuda.empty_cache()
 
+            # Periodic batch-level validation during epoch
+            if (
+                args is not None
+                and args.val_interval_batches > 0
+                and (batch_idx + 1) % args.val_interval_batches == 0
+            ):
+                print(f"\n📊 Running validation at step {global_step}...")
+                val_loss = validate(model, model_lora, val_dataloader, device)
+                print(f"   Validation Loss: {val_loss:.4f}\n")
+                if wandb_run is not None:
+                    wandb.log({"val_loss": val_loss}, step=global_step)
+                # Resume training mode after validation
+                model_lora.train()
+                model.cad_gpt.train()
+
             # Periodic batch-level sampling during epoch
             if (
                 args is not None
@@ -569,26 +614,29 @@ def train_lora(
             f"\n✅ Epoch {epoch + 1}/{num_epochs} completed | Avg Loss: {avg_epoch_loss:.4f} | Batches: {num_batches}\n"
         )
 
-        # Run validation
-        print("Running validation...")
-        val_loss_avg = validate(model, model_lora, val_dataloader, device)
-        print(f"   Validation Loss: {val_loss_avg:.4f}\n")
+        # Run validation at epoch intervals
+        if args.val_interval_epochs > 0 and (epoch + 1) % args.val_interval_epochs == 0:
+            print("📊 Running validation...")
+            val_loss_avg = validate(model, model_lora, val_dataloader, device)
+            print(f"   Validation Loss: {val_loss_avg:.4f}\n")
 
-        # Log to wandb
-        if wandb_run is not None:
-            wandb.log(
-                {
-                    "epoch_loss": avg_epoch_loss,
-                    "val_loss": val_loss_avg,
-                }
-            )
+            # Log to wandb
+            if wandb_run is not None:
+                wandb.log(
+                    {
+                        "epoch_loss": avg_epoch_loss,
+                        "val_loss": val_loss_avg,
+                    },
+                    step=global_step,
+                )
         else:
             # Still log epoch loss if not using wandb
             if wandb_run is not None:
                 wandb.log(
                     {
                         "epoch_loss": avg_epoch_loss,
-                    }
+                    },
+                    step=global_step,
                 )
 
         # Resume training mode for next epoch
@@ -680,7 +728,7 @@ def main():
     lora_config = LoraConfig(
         r=args.lora_r,
         lora_alpha=args.lora_alpha,
-        target_modules=["to_q", "to_k", "to_v", "to_out"],
+        target_modules=["to_q", "to_v", "proj"],
         lora_dropout=0.1,
         bias="none",
         modules_to_save=[],

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=1_pipe
+#SBATCH --job-name=spur_gears
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -50,3 +50,4 @@ echo " Preprocessing complete!"
 echo " Train data saved to:  $OUTPUT_DIR/train/data.parquet"
 echo " Val data saved to:    $OUTPUT_DIR/val/data.parquet"
 echo "================================================================"
+ 

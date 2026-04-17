@@ -71,16 +71,17 @@ echo "Starting LoRA Fine-Tuning..."
     --dataset_path "$DATASET_PATH" \
     --output_dir "$OUTPUT_DIR" \
     --batch_size 4 \
-    --num_epochs 2 \
-    --learning_rate 5e-5 \
-    --sample_temperature 1 \
+    --num_epochs 4 \
+    --learning_rate 3e-5 \
+    --sample_temperature 0.7 \
     --sample_complexity 17 \
     --sample_interval_epochs 1 \
     --sample_interval_batches 0 \
     --lora_r 32 \
     --lora_alpha 128 \
     --wandb_project "lora-autobrep" \
-    --wandb_entity "slochmann-ethz"
+    --wandb_entity "slochmann-ethz" \
+    --val_interval_batches 33
 # complexity: 14=easy, 15=medium, 16=hard, 17=random/uncond
 echo "================================================================"
 echo " LoRA Training complete!"
