@@ -2,24 +2,6 @@
 \label{chap:methodology}
 
 %===============================================================
-\subsection{AutoBrep Model Architecture}
-%===============================================================
-
-The AutoBrep model is built on a transformer-based decoder architecture designed specifically for B-Rep generation. The model operates on a discrete token sequence representation of CAD geometry, enabling efficient parallel processing during training.
-
-\par
-
-\textbf{Key architectural components:}
-\begin{itemize}
-	\item \textbf{Tokenization Layer}: Converts continuous B-Rep geometry (UV-grids, bounding boxes) into discrete tokens
-	\item \textbf{Transformer Decoder}: Multi-head self-attention and feed-forward layers
-	\item \textbf{Position Embeddings}: Captures sequential dependencies in geometry
-	\item \textbf{Vocabulary}: A learned codebook of geometric primitives
-\end{itemize}
-
-The model is pre-trained on a large corpus of CAD models and exhibits strong zero-shot generation capabilities. Inference proceeds autoregressively, generating one token at a time conditioned on previously generated tokens and any conditioning signals (e.g., complexity level, sketch inputs).
-
-%===============================================================
 \subsection{Low-Rank Adaptation (LoRA) Fine-tuning}
 %===============================================================
 
@@ -105,15 +87,15 @@ Fine-tuning is performed using the AdamW optimizer on the frozen base model with
 \textbf{Hyperparameters:}
 \begin{table}[h!]
 	\centering
-	\caption{Training Hyperparameters}
+	\caption{Training Hyperparameters following \cite{Hu2021lora}}
 	\label{tab:training_hyperparams}
 	\small
 	\begin{tabularx}{\textwidth}{@{}l X l@{}}
 		\toprule
 		\textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
 		\midrule
-		Batch Size & 4 & Constrained by GPU memory; adjust lower for larger models \\
-		Number of Epochs & 50 & Early stopping may be applied based on validation loss \\
+		Batch Size & 4 & Same as in Autobrep \cite{Xu2025autobrep} \\
+		Number of Epochs & 4 & Typical  \\
 		Learning Rate & 1e-4--5e-5 & Lower rates recommended for small datasets to prevent overfitting \\
 		LoRA Rank & 8--16 & Balance between model capacity and parameter efficiency \\
 		LoRA Alpha & 32 & Effective scaling = $\alpha / r$; adjust for sensitivity \\

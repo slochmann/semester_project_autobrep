@@ -5,9 +5,17 @@
 \subsection{Context and Motivation}
 %===============================================================
 
-The design and optimization of complex engineering artifacts is a cornerstone of innovation in manufacturing, aerospace, architecture, and countless other industries. However, the manual design process is time-consuming, requires extensive expertise, and often results in locally optimal solutions. Computer-Aided Design (CAD) systems have revolutionized this workflow, but they remain fundamentally manual: designers must iteratively specify geometry, test performance, and adjust parameters.
+The idea for this thesis came from the ETH spinoff Manukai AG where they need synthetic CAD training data for their machine learning models for CAM manufacturing. Currently they do this using heuristics, generating random sequences of extrusions. Additionally they need to finetune their models on small customer CAD datasets. The companies dont want to share their propietary CAD data beyond their personal applications, as it might contain trade secrets, so Manukai needs to finetune their models with very limited data each time anew to avoid leakage between companies. Here it would be very useful to be able to generate similar high-quality data, which is where this project comes in.
 
-The emergence of generative artificial intelligence—particularly deep learning models—offers a transformative opportunity to automate and augment the design process. Rather than requiring explicit specification of every geometric detail, generative models can learn patterns from existing designs and propose novel solutions that satisfy design constraints and objectives.
+The initial Idea of using a diffusion model following BrepGen \cite{Xu2024brepgen} was postponed as for two main reasons. Firstly, in between the first discussion of the project and the start, another student at Manukai had already explored BrepGen \cite{Xu2024brepgen} and did not come to useful results. Secondly, a new paper was published by the main author of this paper, called AutoBrep \cite{Xu2025autobrep}, which had more promising results. It generated B-Rep's with higher quality and higher complexity Fig \ref{fig:validity} which could be reproduced during inference aswell.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/validity.png}
+	\caption{Training and Validation Loss Over Epochs}
+	\label{fig:validity}
+\end{figure}
+
 
 %===============================================================
 \subsection{Problem Statement}
@@ -20,9 +28,7 @@ Machine learning models for CAD geometry generation have been developed, includi
 \textbf{Key challenges:}
 \begin{itemize}
     \item \textbf{Domain Adaptation}: Pre-trained models reflect patterns from their training data; specialized design domains (e.g., specific mechanical parts, architectural elements) may have unique characteristics not well-represented in general training corpora
-    \item \textbf{Computational Cost}: Fine-tuning large pre-trained models typically requires modifying all parameters, demanding substantial computational resources and memory
-    \item \textbf{Limited Data}: Specialized domains often have limited labeled CAD datasets, making classical supervised learning inefficient
-    \item \textbf{Accessibility}: The computational and expertise barriers limit adoption of generative CAD tools outside large technology companies
+    \item \textbf{Limited Data}: High quality CAD data which is B-Rep compatible is scarce and expensive. It exists in large quantities in industrial companies, but often as parts of trade secrets, and is created in work-intensive manual work by experts.
 \end{itemize}
 
 %===============================================================
@@ -33,13 +39,12 @@ This work addresses these challenges by investigating \textit{parameter-efficien
 
 \par
 
-\textbf{``How can large pre-trained generative CAD models be efficiently adapted to specialized design domains with minimal computational overhead?''}
+\textbf{``Can large pre-trained generative CAD models like AutoBrep from \cite{Xu2025autobrep} be efficiently adapted to specialized design domains with limited data using Low Rank Adaptation?''}
 
 To answer this, we:
 \begin{enumerate}
     \item Implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model
     \item Demonstrate domain-specific adaptation on custom CAD datasets
-    \item Quantify efficiency gains (memory, training time, parameter count)
     \item Analyze scalability of multiple LoRA adapters for different domains
     \item Evaluate practical utility and limitations of the approach
 \end{enumerate}
@@ -55,11 +60,9 @@ This thesis makes the following contributions to the field of generative design 
 \begin{enumerate}
     \item \textbf{Practical Framework}: An end-to-end implementation of LoRA fine-tuning for AutoBrep, including data preprocessing, training, and inference pipelines
 
-    \item \textbf{Efficiency Analysis}: Empirical demonstration that domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters, enabling fine-tuning on consumer-grade hardware
+    \item \textbf{Efficiency Analysis}: Empirical demonstration whether domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters and order of 500 samples, enabling fine-tuning with very limited data and without changing the base model's parameters
 
-    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, and experimental procedures enabling future research and practical adoption
-
-    \item \textbf{Scalability Insights}: Evidence that LoRA adapters can be trained independently and composed for multi-domain applications
+    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, training curves and experimental procedures enabling future research and practical adoption
 \end{enumerate}
 
 %===============================================================

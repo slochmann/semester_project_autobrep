@@ -6,14 +6,13 @@
 %===============================================================
 
 The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces. This representation form enables precise geometric modeling and is widely used in industrial design, mechanical engineering, and manufacturing.
-
-\cite{Raeth2023} provide a comprehensive overview of boundary representations and their role in modern CAD systems. The key components of a B-Rep include faces, edges, and vertices, along with their topological relationships.
+The key components of a B-Rep include faces, edges, and vertices, along with their topological relationships.
 
 \par
 
 \textbf{Key characteristics of B-Reps:}
 \begin{itemize}
-	\item \textbf{Explicit Surface Representation}: Surfaces are defined using parametric equations (e.g., NURBS surfaces)
+	\item \textbf{Explicit Surface Representation}: Surfaces are defined using parametric equations (e.g., Non-Uniform Rational Basis Splines)
 	\item \textbf{Topological Consistency}: Maintains relationships between geometric elements
 	\item \textbf{Industry Standard}: Widely supported by professional CAD software (Autodesk, Solidworks, FreeCAD)
 	\item \textbf{High Precision}: Suitable for manufacturing and detailed design specifications
@@ -41,64 +40,47 @@ Recent advances in deep learning have enabled the development of neural models c
 
 \cite{Xu2024brepgen} introduces BrepGen, a diffusion-based model for direct B-Rep generation. The key innovation is a \textit{structured latent geometry} representation that encodes B-Reps as hierarchical trees with three levels: faces, edges, and vertices.
 
-\par
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1\textwidth]{figures/brepgen_encoding.png}
+	\caption{Encoding B-rep's into point clouds: 32 x 32 points are sampled over each surface and 32 points over each edge of the solid. The faces and edges are then stored in a hierarchical tree which encodes the topology (connections between different faces and edges)}
+	\label{fig:brepgen_encoding}
+\end{figure}
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1\textwidth]{figures/brepgen_model.png}
+	\caption{Generating new B-rep's: The noise for faces and bounding boxes (spacial lmitis of the faces) is denoised with two denoisers. Conditioned on these faces, edge noise and bounding boxes are generated and again twice denoised}
+	\label{fig:brepgen_model}
+\end{figure}
 
-\textbf{BrepGen Architecture:}
-\begin{table}[h!]
-\centering
-\caption{BrepGen Model Components}
-\label{tab:brepgen_architecture}
-\small
-\begin{tabularx}{\textwidth}{@{}l X l@{}}
-\toprule
-\textbf{Component} & \textbf{Function} & \textbf{Details} \\
-\midrule
-2D VAE Encoder & Compress face point grids & Normalized to $(4\times 4\times 3)$ latent codes \\
-1D VAE Encoder & Compress edge point grids & Normalized to $(4\times 3)$ latent codes \\
-Latent Diffusion Module & Four Transformer denoisers & Sequential: face geometry, position, edge geometry, vertices \\
-Node Duplication & Encode topology implicitly & Mating and association duplication \\
-Post-Processing & Recover B-Rep structure & Merge duplicated nodes, align geometry \\
-\bottomrule
-\end{tabularx}
-\end{table}
+ Postprocessing: The generated edge and and face pointclouds are sewed back into  B-rep's in .step format using the Open-Cascade library.
 
-The model employs node duplication to encode both geometry (via bounding boxes and latent codes) and topology (via duplicated node indices). Sequential denoising progressively refines face, edge, and vertex features from coarse to fine. The architecture supports both unconditional generation and conditional tasks (class-guided, autocompletion, interpolation).
+
 
 %===============================================================
 \subsubsection{AutoBrep: Autoregressive Approach}
 %===============================================================
 
-\cite{Xu2025autobrep} presents AutoBrep, an autoregressive Transformer that unifies B-Rep geometry and topology into a single stream of discrete tokens. Unlike multi-stage diffusion, AutoBrep generates B-Reps end-to-end via next-token prediction.
+\cite{Xu2025autobrep} presents AutoBrep, an autoregressive Transformer that unifies B-Rep geometry and topology into a single stream of discrete tokens. Unlike multi-stage diffusion, AutoBrep generates B-Reps end-to-end via next-token prediction Fig. \ref{fig:scheme}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1\textwidth]{figures/autobrep_scheme.png}
+	\caption{Starting from the top left, the encoding into point clouds is equivalent to BrepGen. Next, the faces are encoded into Tokens using a VAE and quantized with finite scalar quantization into a 1000 word vocabulary. Tokens are then places in a sequence where the order is retrieved from a Breadth-First-Search over the surfaces and edges of the B-Rep. This sequence is then fed into a GPT-like transformer model using a causal mask. Then the transformer predicts the sequence (during training, else a new sequence) through next-token prediction and the process repeats in the opposite direction.}
+	\label{fig:scheme}
+\end{figure}
 
 \par
 
-\textbf{AutoBrep Architecture:}
-\begin{table}[h!]
-\centering
-\caption{AutoBrep Model Components}
-\label{tab:autobrep_architecture}
-\small
-\begin{tabularx}{\textwidth}{@{}l X l@{}}
-\toprule
-\textbf{Component} & \textbf{Function} & \textbf{Details} \\
-\midrule
-Deep Compression AE & Compress point grids & Face $(32\times 32\times 3) \to (2\times 2\times 4)$ tokens; Edge $(32\times 3) \to (2\times 4)$ tokens \\
-Finite Scalar Quantization (FSQ) & Discretize embeddings & Codebook: 1000 discrete tokens \\
-Breadth-First Traversal (BFT) & Sequence ordering & Face adjacency graph traversal; maintains local structure \\
-Unified Tokenization & Single token stream & Combine geometry $(C, G)$ and topology $(T)$ tokens \\
-GPT-style Transformer & Autoregressive generation & 16 layers, 32 heads, 2048 hidden dim, 3K context \\
-\bottomrule
-\end{tabularx}
-\end{table}
 
-Key advantages: (1) Single unified architecture vs. multi-stage pipeline, (2) 2--5$\times$ faster inference via next-token prediction, (3) Native support for B-Rep autocompletion, (4) Scalability to 100+ face solids. The tokenization scheme encodes bounding-box coordinates $(C)$, latent geometry $(G)$ compressed by Deep Compression AE with FSQ, and local topology references $(T)$ that only reference faces within recent BFT levels.
+Key advantages: (1) Single unified architecture vs. multi-stage pipeline, (2) 2--5$\times$ faster inference via next-token prediction, (3) Native support for B-Rep completion through next token prediction, (4) Scalability to 100+ face solids.
 
 \par
 
 \textbf{Comparison:}
 \begin{itemize}
 	\item \textbf{BrepGen}: Six modules (2 VAEs + 4 diffusion denoisers), multi-stage cascading, slower (~10 sec/sample), supports conditional generation
-	\item \textbf{AutoBrep}: Three modules (2 autoencoders + 1 transformer), unified pipeline, faster (~0.46 sec/sample), nat supports autocompletion with face preservation
+	\item \textbf{AutoBrep}: Three modules (2 autoencoders + 1 transformer), unified pipeline, faster (~0.46 sec/sample), natively supports autocompletion with face preservation
 \end{itemize}
 
 %===============================================================
@@ -119,14 +101,15 @@ where $W_0 \in \mathbb{R}^{d_{\text{out}} \times d_{\text{in}}}$ is the frozen p
 
 \par
 
-\textbf{Key Advantages:}
-\begin{itemize}
-	\item \textbf{Memory Efficiency}: Reduces GPU memory consumption by 50--70\% compared to full fine-tuning; gradients only computed for $A$ and $B$
-	\item \textbf{Parameter Count}: With rank $r$, added parameters scale as $O(r(d_{\text{in}} + d_{\text{out}}))$ vs. $O(d_{\text{in}} \cdot d_{\text{out}})$ for full weights
-	\item \textbf{Training Speed}: Faster convergence and reduced inference latency due to smaller computational graph
-	\item \textbf{Modularity}: Multiple LoRA adapters trained independently can be composed for multi-task learning
-	\item \textbf{Transferability}: Lightweight adapter weights ($\sim$1\% of model size) are portable across domains and devices
-\end{itemize}
+This approach is very compute and memory efficient by only adding adapters of around 1\% model size to the base model without modifying it.
+
+\begin{figure}[h]
+	\includegraphics[width=0.76\textwidth]{figures/lora.png}
+	\centering
+	\caption{LoRA adapters are added in the attention layers to the query and valuey weight matrices \cite{Hu2021lora}.}
+
+	\label{fig:lora}
+\end{figure}
 
 %===============================================================
 \subsection{Related Work in Generative Design}
@@ -135,8 +118,8 @@ where $W_0 \in \mathbb{R}^{d_{\text{out}} \times d_{\text{in}}}$ is the frozen p
 The field of neural CAD generation has grown rapidly in recent years. Multiple approaches have been explored:
 
 \begin{itemize}
-	\item \textbf{Seq2Seq Models}: Early work on generating CAD sketches and primitives
-	\item \textbf{Graph Neural Networks}: Capturing the topological structure of CAD models
+	\item \textbf{CAD Agents}: Copilot the CAD software with a human in the loop
+	\item \textbf{Graph Neural Networks}: Capturing the topological structure of CAD models through graphs
 	\item \textbf{Transformer-based Methods}: Leveraging attention mechanisms for long-range dependencies
 	\item \textbf{Multi-modal Learning}: Combining text, images, and geometry for conditional generation
 \end{itemize}

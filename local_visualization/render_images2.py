@@ -3,6 +3,7 @@ import math
 import os
 import subprocess
 import sys
+from datetime import datetime
 
 from OCC.Core.STEPControl import STEPControl_Reader
 from OCC.Display.backend import load_backend
@@ -17,8 +18,14 @@ if app is None:
     app = QtWidgets.QApplication(sys.argv)
 
 
-def process_step_files_in_directory(step_dir, output_base_dir="output_images"):
-    """Process STEP files by spawning a new subprocess for each file."""
+def process_step_files_in_directory(step_dir, output_base_dir="output_images", num_files=None):
+    """Process STEP files by spawning a new subprocess for each file.
+    
+    Args:
+        step_dir: Directory containing STEP files
+        output_base_dir: Base directory for output images
+        num_files: Maximum number of files to process (None = all files)
+    """
 
     # Find all STEP files in the given directory
     step_files = glob.glob(os.path.join(step_dir, "*.step"))
@@ -26,6 +33,11 @@ def process_step_files_in_directory(step_dir, output_base_dir="output_images"):
     if not step_files:
         print(f"No STEP files found in directory: {step_dir}")
         return
+
+    # Limit number of files if specified
+    if num_files is not None:
+        step_files = step_files[:num_files]
+        print(f"Processing {len(step_files)} out of available files (--num-files={num_files})")
 
     os.makedirs(output_base_dir, exist_ok=True)
 
@@ -118,8 +130,34 @@ if __name__ == "__main__":
         process_single_file(step_file, output_dir)
     else:
         # Main process: find and spawn subprocesses for each file
-        step_dir = "/home/sebi/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/euler_remote_mount/scratch/AutoBrep/lora_samples/600_cylinders"
-        process_step_files_in_directory(step_dir)
+        step_dir = "/home/sebi/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/euler_remote_mount/scratch/AutoBrep/data/step/600_cylinders"
+        
+        # Parse --num-files argument
+        num_files = None
+        if "--num-files" in sys.argv:
+            try:
+                idx = sys.argv.index("--num-files")
+                num_files = int(sys.argv[idx + 1])
+                print(f"Limiting to {num_files} files")
+            except (IndexError, ValueError):
+                print("Invalid --num-files argument. Usage: python render_images2.py --num-files <N>")
+        
+        # Parse --output-dir argument, or create timestamped directory
+        output_base_dir = "output_images"
+        if "--output-dir" in sys.argv:
+            try:
+                idx = sys.argv.index("--output-dir")
+                output_base_dir = sys.argv[idx + 1]
+                print(f"Using output directory: {output_base_dir}")
+            except IndexError:
+                print("Invalid --output-dir argument. Usage: python render_images2.py --output-dir <DIR>")
+        else:
+            # Create timestamped directory by default
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_base_dir = f"output_images_{timestamp}"
+            print(f"Creating timestamped output directory: {output_base_dir}")
+        
+        process_step_files_in_directory(step_dir, output_base_dir=output_base_dir, num_files=num_files)
 
 
-# xvfb-run -a python render_images.py
+# xvfb-run -a python render_images2.py --num_files 36
