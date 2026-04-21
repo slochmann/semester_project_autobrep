@@ -5,34 +5,13 @@
 \subsection{B-Representation (B-Rep) Fundamentals}
 %===============================================================
 
-The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces. This representation form enables precise geometric modeling and is widely used in industrial design, mechanical engineering, and manufacturing.
-The key components of a B-Rep include faces, edges, and vertices, along with their topological relationships.
-
-\par
-
-\textbf{Key characteristics of B-Reps:}
-\begin{itemize}
-	\item \textbf{Explicit Surface Representation}: Surfaces are defined using parametric equations (e.g., Non-Uniform Rational Basis Splines)
-	\item \textbf{Topological Consistency}: Maintains relationships between geometric elements
-	\item \textbf{Industry Standard}: Widely supported by professional CAD software (Autodesk, Solidworks, FreeCAD)
-	\item \textbf{High Precision}: Suitable for manufacturing and detailed design specifications
-\end{itemize}
+The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces, enabling precise geometric modeling widely used in industrial design, mechanical engineering, and manufacturing. The key components include faces, edges, and vertices, along with their topological relationships. B-Reps employ explicit surface representations using parametric equations (e.g., Non-Uniform Rational Basis Splines), enabling precise surface definition and manipulation. They maintain topological consistency by preserving relationships between geometric elements, ensuring valid and watertight solid structures. As an industry standard, B-Reps are widely supported by professional CAD software including Autodesk, Solidworks, and FreeCAD, providing the high precision necessary for manufacturing applications and detailed design specifications.
 
 %===============================================================
 \subsection{Generative Models for CAD}
 %===============================================================
 
-Recent advances in deep learning have enabled the development of neural models capable of generating CAD geometry. Two complementary approaches have emerged: diffusion-based and autoregressive methods, each with distinct advantages for direct B-Rep synthesis.
-
-\par
-
-\textbf{Generative modeling approaches:}
-\begin{itemize}
-	\item \textbf{Autoregressive Models}: Generate sequences token-by-token, capturing dependencies
-	\item \textbf{Diffusion Models}: Iteratively refine from noise, offering excellent quality
-	\item \textbf{VAE-based Methods}: Learning compressed latent representations
-	\item \textbf{Hybrid Approaches}: Combining multiple techniques for optimal performance
-\end{itemize}
+Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-based and autoregressive methods. This thesis investigates both paradigms to identify the most suitable approach for domain-specific fine-tuning.
 
 %===============================================================
 \subsubsection{BrepGen: Diffusion-Based Approach}
@@ -40,20 +19,33 @@ Recent advances in deep learning have enabled the development of neural models c
 
 \cite{Xu2024brepgen} introduces BrepGen, a diffusion-based model for direct B-Rep generation. The key innovation is a \textit{structured latent geometry} representation that encodes B-Reps as hierarchical trees with three levels: faces, edges, and vertices.
 
+\textbf{Latent Space Encoding:} B-Reps are converted into point cloud representations by sampling 32×32 points uniformly over each surface and 32 points over each edge. This hierarchical tree structure explicitly encodes topology—connections between faces and edges—enabling diffusion models to learn both geometry and topology jointly.
+
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/brepgen_encoding.png}
-	\caption{Encoding B-rep's into point clouds: 32 x 32 points are sampled over each surface and 32 points over each edge of the solid. The faces and edges are then stored in a hierarchical tree which encodes the topology (connections between different faces and edges)}
+	\caption{BrepGen encoding: B-reps are converted into point clouds with 32×32 samples per face and 32 per edge, organized in a hierarchical tree encoding topology}
 	\label{fig:brepgen_encoding}
 \end{figure}
+
+\textbf{Generation Pipeline:} BrepGen employs a multi-stage diffusion approach with six modules (2 VAEs + 4 denoisers). Noise for faces and bounding boxes is denoised sequentially, then conditioned on these refined faces, edge noise is iteratively refined.
+
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/brepgen_model.png}
-	\caption{Generating new B-rep's: The noise for faces and bounding boxes (spacial lmitis of the faces) is denoised with two denoisers. Conditioned on these faces, edge noise and bounding boxes are generated and again twice denoised}
+	\caption{BrepGen generation: Multi-stage diffusion with separate denoisers for faces (bounding boxes) and edges, conditioned on intermediate face predictions}
 	\label{fig:brepgen_model}
 \end{figure}
 
- Postprocessing: The generated edge and and face pointclouds are sewed back into  B-rep's in .step format using the Open-Cascade library.
+\textbf{Post-Processing (Heuristic + Optimization):} The generated point clouds require extensive post-processing:
+\begin{enumerate}
+	\item Deduplication of vertices using geometric thresholds (0.08 bounding box tolerance, 0.2 point distance)
+	\item Recovery of topological associations (mating of shared geometry across faces)
+	\item Geometric refinement: averaging vertex positions, aligning/flipping edges, fitting surfaces using OpenCascade
+	\item Final sewing into valid solids in .step format
+\end{enumerate}
+
+\textbf{Performance:} BrepGen achieves moderate validity rates on simpler geometries but shows reduced performance on high-complexity solids (50+ faces). Its multi-stage cascading pipeline is slower than autoregressive approaches.
 
 
 
@@ -61,12 +53,14 @@ Recent advances in deep learning have enabled the development of neural models c
 \subsubsection{AutoBrep: Autoregressive Approach}
 %===============================================================
 
-\cite{Xu2025autobrep} presents AutoBrep, an autoregressive Transformer that unifies B-Rep geometry and topology into a single stream of discrete tokens. Unlike multi-stage diffusion, AutoBrep generates B-Reps end-to-end via next-token prediction Fig. \ref{fig:scheme}.
+\cite{Xu2025autobrep} presents AutoBrep, an autoregressive Transformer that unifies B-Rep geometry and topology into a single stream of discrete tokens. Unlike multi-stage diffusion, AutoBrep generates B-Reps end-to-end via next-token prediction, treating CAD generation as a language modeling task.
+
+\textbf{Latent Space Encoding:} AutoBrep uses a VAE to encode the point cloud representation (identical to BrepGen's initial encoding) into discrete tokens using finite scalar quantization with a 1000-word vocabulary. These tokens are then sequenced based on a breadth-first search ordering of the B-Rep's topology, preserving structural relationships.
 
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/autobrep_scheme.png}
-	\caption{Starting from the top left, the encoding into point clouds is equivalent to BrepGen. Next, the faces are encoded into Tokens using a VAE and quantized with finite scalar quantization into a 1000 word vocabulary. Tokens are then places in a sequence where the order is retrieved from a Breadth-First-Search over the surfaces and edges of the B-Rep. This sequence is then fed into a GPT-like transformer model using a causal mask. Then the transformer predicts the sequence (during training, else a new sequence) through next-token prediction and the process repeats in the opposite direction.}
+	\caption{AutoBrep architecture: Point clouds are VAE-encoded into discrete tokens, sequenced via BFS, then passed to a GPT-like causal-masked transformer for next-token prediction. Blue boxes, arrows and sequence part corresponds to bounding box.}
 	\label{fig:scheme}
 \end{figure}
 
@@ -75,13 +69,11 @@ Recent advances in deep learning have enabled the development of neural models c
 
 Key advantages: (1) Single unified architecture vs. multi-stage pipeline, (2) 2--5$\times$ faster inference via next-token prediction, (3) Native support for B-Rep completion through next token prediction, (4) Scalability to 100+ face solids.
 
-\par
+%===============================================================
+\subsubsection{NeuroNurbs: Surface Embeddings}
+%===============================================================
 
-\textbf{Comparison:}
-\begin{itemize}
-	\item \textbf{BrepGen}: Six modules (2 VAEs + 4 diffusion denoisers), multi-stage cascading, slower (~10 sec/sample), supports conditional generation
-	\item \textbf{AutoBrep}: Three modules (2 autoencoders + 1 transformer), unified pipeline, faster (~0.46 sec/sample), natively supports autocompletion with face preservation
-\end{itemize}
+Alternative to point clouds, \cite{Fan2024neuronurbs} proposes NeuroNurbs, which learns latent embeddings of surfaces using spline parameters directly. While this approach offers interpretable surface representations, it is less mature than BrepGen and AutoBrep for full B-Rep generation and was not pursued in this work. However, it represents an important direction for surface-aware generative models.
 
 %===============================================================
 \subsection{Low-Rank Adaptation (LoRA)}
@@ -110,18 +102,3 @@ This approach is very compute and memory efficient by only adding adapters of ar
 
 	\label{fig:lora}
 \end{figure}
-
-%===============================================================
-\subsection{Related Work in Generative Design}
-%===============================================================
-
-The field of neural CAD generation has grown rapidly in recent years. Multiple approaches have been explored:
-
-\begin{itemize}
-	\item \textbf{CAD Agents}: Copilot the CAD software with a human in the loop
-	\item \textbf{Graph Neural Networks}: Capturing the topological structure of CAD models through graphs
-	\item \textbf{Transformer-based Methods}: Leveraging attention mechanisms for long-range dependencies
-	\item \textbf{Multi-modal Learning}: Combining text, images, and geometry for conditional generation
-\end{itemize}
-
-The integration of LoRA with pre-trained generative models enables efficient adaptation to specialized domains without requiring large labeled datasets or extensive computational resources. This is particularly valuable for downstream applications where domain-specific data is limited.

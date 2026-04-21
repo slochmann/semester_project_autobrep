@@ -45,6 +45,12 @@
 % Adjusts the penalties for breaking URLs in the bibliography.
 % Higher values reduce the likelihood of breaking URLs at certain points, enhancing URL display.
 
+% ===============================================================
+% Load multirow for multi-row table cells
+% ===============================================================
+\usepackage{multirow}
+% Enables merging of multiple rows in tables with the \multirow command.
+
 %===========================================================================
 % The preamble ends here. The main document starts after \begin{document}.
 %===========================================================================
@@ -89,16 +95,16 @@
     % \clearpage ensures that the following content starts on a new page.
 
     % List of Figures
-    \listoffigures
-    \addcontentsline{toc}{section}{List of Figures}
+    %\listoffigures
+    %\addcontentsline{toc}{section}{List of Figures}
     \clearpage
     % Generates a list of all figures included in the document.
     % Adds an entry titled "List of Figures" to the table of contents.
     % \clearpage ensures that the following content starts on a new page.
 
     % List of Tables
-    \listoftables
-    \addcontentsline{toc}{section}{List of Tables}
+    %\listoftables
+    %\addcontentsline{toc}{section}{List of Tables}
     \clearpage
     % Generates a list of all tables included in the document.
     % Adds an entry titled "List of Tables" to the table of contents.

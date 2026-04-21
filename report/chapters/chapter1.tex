@@ -5,16 +5,9 @@
 \subsection{Context and Motivation}
 %===============================================================
 
-The idea for this thesis came from the ETH spinoff Manukai AG where they need synthetic CAD training data for their machine learning models for CAM manufacturing. Currently they do this using heuristics, generating random sequences of extrusions. Additionally they need to finetune their models on small customer CAD datasets. The companies dont want to share their propietary CAD data beyond their personal applications, as it might contain trade secrets, so Manukai needs to finetune their models with very limited data each time anew to avoid leakage between companies. Here it would be very useful to be able to generate similar high-quality data, which is where this project comes in.
+This thesis is conducted at the IDEAL lab in collaboration with Manukai AG, an ETH spinoff developing machine learning models for CAM manufacturing. Manukai faces a critical challenge: they need domain-specific synthetic CAD training data to fine-tune their models, but cannot mix customers' proprietary CAD datasets in their model between companies due to trade secret concerns. Generating high-quality, domain-specific data is therefore essential.
 
-The initial Idea of using a diffusion model following BrepGen \cite{Xu2024brepgen} was postponed as for two main reasons. Firstly, in between the first discussion of the project and the start, another student at Manukai had already explored BrepGen \cite{Xu2024brepgen} and did not come to useful results. Secondly, a new paper was published by the main author of this paper, called AutoBrep \cite{Xu2025autobrep}, which had more promising results. It generated B-Rep's with higher quality and higher complexity Fig \ref{fig:validity} which could be reproduced during inference aswell.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.6\textwidth]{figures/validity.png}
-	\caption{Training and Validation Loss Over Epochs}
-	\label{fig:validity}
-\end{figure}
+Recently, the state-of-the-art AutoBrep model \cite{Xu2025autobrep} demonstrated superior capabilities in generating Boundary Representations (B-Reps) with higher quality and complexity compared to prior approaches like BrepGen \cite{Xu2024brepgen}. However, directly applying pre-trained generative models to new specialized domains requires either full retraining (computationally expensive and data-intensive) or efficient adaptation techniques. This motivates investigating parameter-efficient fine-tuning using Low-Rank Adaptation (LoRA) to enable rapid domain adaptation with limited data.
 
 
 %===============================================================
