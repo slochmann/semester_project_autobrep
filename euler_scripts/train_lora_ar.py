@@ -146,6 +146,26 @@ def parse_args():
         help="Interval (in batches) to run validation within epochs (0=disabled)",
     )
 
+    # Reconstruction tolerances
+    parser.add_argument(
+        "--z_threshold",
+        type=float,
+        default=0.002,
+        help="Z-threshold for AutoBrepBuilder reconstruction",
+    )
+    parser.add_argument(
+        "--vertex_threshold",
+        type=float,
+        default=0.002,
+        help="Vertex threshold for AutoBrepBuilder reconstruction",
+    )
+    parser.add_argument(
+        "--sewing_tolerance",
+        type=float,
+        default=0.002,
+        help="Sewing tolerance for AutoBrepBuilder reconstruction",
+    )
+
     return parser.parse_args()
 
 
@@ -292,7 +312,10 @@ def sample_during_training(
     batch_cad_data = AutoRegressiveSampler.convert_to_cad_data(batch_decoded)
     builders = [
         AutoBrepBuilder(
-            device=device, z_threshold=0.002, vertex_threshold=0.002, sewing_tolerance=0.002
+            device=device, 
+            z_threshold=args.z_threshold, 
+            vertex_threshold=args.vertex_threshold, 
+            sewing_tolerance=args.sewing_tolerance
         )
     ]
 

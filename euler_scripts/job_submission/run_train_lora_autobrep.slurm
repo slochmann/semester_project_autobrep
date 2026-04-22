@@ -81,7 +81,10 @@ echo "Starting LoRA Fine-Tuning..."
     --lora_alpha 128 \
     --wandb_project "lora-autobrep" \
     --wandb_entity "slochmann-ethz" \
-    --val_interval_batches 33
+    --val_interval_batches 33 \
+    --z_threshold 0.002 \
+    --vertex_threshold 0.002 \
+    --sewing_tolerance 0.002
 # complexity: 14=easy, 15=medium, 16=hard, 17=random/uncond
 echo "================================================================"
 echo " LoRA Training complete!"
