@@ -2,68 +2,39 @@
 \label{chap:conclusion}
 
 %===============================================================
-\subsection{Summary of Contributions}
+\subsection{Summary of Findings}
 %===============================================================
 
-This thesis presents a comprehensive study on fine-tuning generative CAD models using Low-Rank Adaptation (LoRA). The key contributions are:
+This thesis systematically investigates Low-Rank Adaptation (LoRA) for domain-specific fine-tuning of the AutoBrep generative CAD model. The central finding is that LoRA here functions as a \emph{distribution sharpener} rather than a distribution shifter. Through 8 weeks of systematic experimentation on 600-sample datasets of cylindrical and cubic solids with holes, we demonstrated that LoRA concentrates probability mass onto geometric modes already present in the base model's feature space, achieving approximately 90\% decodability into STEP files. Optimal results were obtained at temperatures between 0.5 and 0.7, which balanced mode concentration with output diversity.
 
-\par
-
-\begin{enumerate}
-	\item \textbf{Practical Framework}: Demonstrated end-to-end LoRA fine-tuning of AutoBrep for domain-specific CAD generation, including data pipeline, training procedures, and inference workflows
-	\item \textbf{Efficiency Analysis}: Quantified the memory and computational efficiency gains of LoRA compared to full fine-tuning, enabling deployment on resource-limited systems
-	\item \textbf{Scalability Study}: Evaluated the scalability of multiple LoRA adapters trained on different CAD domains, showing promise for multi-domain applications
-	\item \textbf{Reproducible Results}: Documented hyperparameters, code, and experimental procedures to enable reproducibility and future research
-\end{enumerate}
+The experiments revealed that within the 600-sample scale, LoRA rank scaling from 16 to 32 provided measurable improvements in both the fraction of geometrically similar samples and the similarity within individual samples, with saturation occurring at rank 32. Consistent with this finding, LoRA alpha scaled reliably as 4× rank across all tested configurations. Learning rate emerged as the dominant hyperparameter; rates exceeding $10^{-4}$ caused rapid overfitting and model collapse, while the optimal range of $10^{-5}$ to $10^{-4}$ achieved convergence toward a target training loss of approximately 1.0 within 3–7 epochs. Adding feed-forward adapters to attention-only configurations provided negligible improvements, suggesting that attention-layer adaptation is the primary mechanism.
 
 %===============================================================
-\subsection{Practical Implications}
+\subsection{Key Insights}
 %===============================================================
 
-The findings of this work have several important implications for practical CAD design automation:
+Three fundamental constraints emerged from this investigation. First, the base AutoBrep model was trained unconditionally without geometry tokens, preventing it from supporting arbitrary conditional generation or sequence continuation. This architectural limitation affects interdependency modeling within training data. Second, the discrete tokenization vocabulary (2000 tokens across surfaces and edges) is sufficient for smooth, geometrically valid reconstruction but may constrain the representability of specialized feature types outside the base model's training distribution. Third, LoRA adapters cannot introduce geometrically novel features; the base model must already contain (in distributed form) the target geometric features for effective adaptation.
 
-\par
-
-\textbf{For Practitioners:}
-\begin{itemize}
-	\item \textbf{Accessible Adaptation}: LoRA makes it practical for smaller organizations to adapt pre-trained models without access to large computing clusters
-	\item \textbf{Rapid Prototyping}: Quick adaptation to new design domains enables faster iterative design and exploration
-	\item \textbf{Cost Reduction}: Reduced computational requirements lower infrastructure costs, making generative CAD tools more economically viable
-\end{itemize}
-
-\textbf{For Research:}
-\begin{itemize}
-	\item \textbf{Transfer Learning Foundation}: LoRA provides a foundation for future research in efficient fine-tuning of large generative models
-	\item \textbf{Benchmark Establishment}: This work establishes baselines and procedures for evaluating domain-specific CAD generation quality
-	\item \textbf{Multi-Modal Extensions}: LoRA's efficiency opens possibilities for integrating multiple modalities (text, images, curves) into CAD generation pipelines
-\end{itemize}
+These constraints highlight why LoRA fine-tuning, despite its computational efficiency, remains fundamentally bounded by the base model's learned feature space. On simple geometric primitives like cylinders and cubes, LoRA successfully amplified characteristic training features despite working with limited data and minimal computational overhead (single GPU, 0.5 hours). However, this effectiveness did not extend to fundamentally different geometries or features outside the base model's scope.
 
 %===============================================================
-\subsection{Limitations and Scope}
+\subsection{Practical and Methodological Contributions}
 %===============================================================
 
-While this work demonstrates the viability of LoRA-based fine-tuning, several limitations should be kept in mind:
+This work establishes practical guidelines for practitioners attempting domain-specific fine-tuning on limited datasets. The successful adaptation of 600-sample datasets suggests this scale represents a practical baseline for simple geometric domains. Conservative hyperparameter selection with continuous monitoring of train–validation loss separation (targeting 10–20\% gap) proved essential for avoiding overfitting. Real-time loss tracking via Weights \& Biases enabled early detection of model degradation, while periodic inference sampling during training revealed mode collapse before final convergence.
 
-\begin{itemize}
-	\item \textbf{Limited Domain Scope}: Experiments focused on specific CAD domains; generalization to other geometric types (e.g., organic shapes, assemblies) requires further investigation
-	\item \textbf{Evaluation Scope}: Quantitative evaluation relied on limited metrics; comprehensive user studies with domain experts would strengthen claims of practical utility
-	\item \textbf{Comparison Baseline}: Direct comparison with other fine-tuning or adaptation methods was limited; more comprehensive benchmarking is needed
-\end{itemize}
+Beyond practical guidance, this thesis contributes to understanding the trade-offs between alternative generative CAD approaches. Published results show BrepGen achieves near-zero validity on high-complexity solids (50+ faces) but is theoreticallly more capable for continuous distributions, whereas AutoBrep maintains 90\% decodability across the full complexity range but is constrained by its limited vocabulary.
 
 %===============================================================
-\subsection{Final Remarks}
+\subsection{Scope and Limitations}
 %===============================================================
 
-The successful application of LoRA to AutoBrep fine-tuning opens doors to efficient, scalable adaptation of generative CAD models. As generative AI becomes more prevalent in design automation, techniques like LoRA provide a practical pathway for organizations to leverage pre-trained models on custom domains without prohibitive computational costs.
+The experiments were limited to simple geometric primitives (cylinders and cubes with holes) on datasets of 600 samples. Generalization to more complex assemblies, irregular geometries, or larger datasets requires further investigation. The evaluation focused on decodability rates and visual similarity rather than functional metrics like manufacturability or structural validity. Additionally, this work examined only the provided AutoBrep checkpoint without retraining the base model or exploring conditional training with geometry tokens enabled, which could potentially overcome some identified architectural constraints.
 
-\par
+%===============================================================
+\subsection{Conclusion}
+%===============================================================
 
-Looking forward, the integration of efficient fine-tuning methods with increasingly capable generative models promises significant advances in:
-\begin{itemize}
-	\item \textit{Design Automation}: Automating routine design tasks while reducing human effort
-	\item \textit{Design Exploration}: Rapidly generating diverse design alternatives for multi-objective optimization
-	\item \textit{Knowledge Preservation}: Encoding domain-specific design knowledge directly into model parameters
-	\item \textit{Accessibility}: Making advanced generative design tools accessible to practitioners with limited computational resources
-\end{itemize}
+This thesis demonstrates that LoRA enables practical, data-efficient fine-tuning of large generative CAD models. For practitioners with limited computational resources and domain-specific adaptation needs, LoRA provides a viable pathway to leverage pre-trained models without prohibitive computational costs. The identified constraints—bounded feature space, unconditional training architecture, and limited vocabulary—are not fundamental failures of LoRA but rather reflect the base model's design choices. Future work addressing these constraints through conditional retraining, larger base models, or alternative architectures (e.g., latent diffusion approaches) could substantially expand the scope of what fine-tuning can achieve.
 
-The methodologies and insights presented in this thesis establish a foundation for continued research and practical deployment of generative models in engineering design workflows.
+The methodologies, hyperparameter guidelines, and empirical findings presented in this thesis establish a foundation for continued research in parameter-efficient fine-tuning of generative CAD models. As generative AI becomes increasingly prevalent in design automation, efficient adaptation techniques will prove essential for making advanced design tools accessible across organizations and domains.

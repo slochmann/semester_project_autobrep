@@ -73,7 +73,7 @@ Even with feedforward adapters at $r=32$, total parameters remain $<2.5\%$, but 
 \subsection{Data Preparation Pipeline}
 %===============================================================
 
-A custom data processing pipeline converts raw STEP files (Fig. \ref{fig:raw}) into a structured parquet dataset compatible with AutoBrep tokenization:
+A custom data processing pipeline converts raw STEP files (Fig.~\ref{fig:raw}) into a structured parquet dataset compatible with AutoBrep tokenization:
 
 \par
 
@@ -81,7 +81,7 @@ A custom data processing pipeline converts raw STEP files (Fig. \ref{fig:raw}) i
 \begin{enumerate}
 	\item \textbf{STEP Loading and Feature Extraction}: Parse CAD solids using Open Cascade, extracting faces, edges, and topology information
 	\item \textbf{UV-Grid Sampling}: Sample UV-parameter spaces to create dense point clouds representing geometric surfaces 
-	\item \textbf{Geometry Normalization}: Normalize coordinates to the $[-1, 1]^3$ range bounding box (Fig. \ref{fig:preprocessed})
+	\item \textbf{Geometry Normalization}: Normalize coordinates to the $[-1, 1]^3$ range bounding box (Fig.~\ref{fig:preprocessed})
 	\item \textbf{Serialization}: Convert numpy arrays to bytes for compact storage in the dataset
 	\item \textbf{Parquet Export}: Write preprocessed geometries with corresponding bounding boxes, complexity metadata (face count), and split into train/validation (0.9/0.1) splits
 \end{enumerate}
@@ -99,7 +99,7 @@ The resulting parquet dataset contains serialized geometry tensors (faces, edges
 	\centering
 	\includegraphics[width=0.5\textwidth]{figures/parquet_sample_016.png}
 	\includegraphics[width=0.49\textwidth]{figures/parquet_sample_026.png}
-	\caption{Two examples of preprocessed point cloud solids from the generic cylinders with holes dataset provided by Manukai}
+	\caption{Two examples of preprocessed point cloud solids from the generic cylinders with holes}
 	\label{fig:preprocessed}
 \end{figure}
 
@@ -123,8 +123,8 @@ Fine-tuning is performed using the AdamW optimizer on the frozen base model with
 		\textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
 		\midrule
 		Batch Size & 4 & Same as in Autobrep \cite{Xu2025autobrep} \\
-		Number of Epochs & 4 & Typical in \cite{Hu2021lora}  \\
-		Learning Rate & 1e-4--5e-5 & Lower rates recommended for small datasets to prevent overfitting \\
+		Number of Epochs & 4 & Typical  \\
+		Learning Rate & 1e-4 to 5e-5 & Lower rates recommended for small datasets to prevent overfitting \\
 		LoRA Rank & 8--32 & Balance between model capacity and parameter efficiency \\
 		LoRA Alpha & $\approx 4 \times$ r & Effective scaling = $\alpha / r$; adjust for sensitivity \\
 		Optimizer & AdamW & Standard choice with weight decay for regularization \\
@@ -153,3 +153,25 @@ During inference, the fine-tuned model generates B-Rep sequences autoregressivel
 \end{itemize}
 
 Generated sequences are converted back to CAD-compatible formats (e.g., STEP files) for evaluation and visualization.
+
+\textbf{B-Rep Reconstruction and Validation:}
+
+Token sequences are decoded into geometric primitives (surfaces, curves) and topological relationships via the FSQ-VAE decoders. The reconstructed B-Rep geometry is then validated and assembled into watertight solids using the AutoBrepBuilder with the following numerical tolerances:
+
+\begin{table}[h!]
+	\centering
+	\caption{B-Rep Reconstruction Tolerances}
+	\label{tab:reconstruction_tolerances}
+	\small
+	\begin{tabularx}{\textwidth}{@{}l l l@{}}
+		\toprule
+		\textbf{Parameter} & \textbf{Value} & \textbf{Interpretation} \\
+		\midrule
+		Sewing Tolerance & $2 \times 10^{-3}$ & Max distance for edge-face sewing (watertightness) \\
+		Vertex Threshold & $2 \times 10^{-3}$ & Max separation for vertex merging \\
+		Z-Threshold & 0 & Z-coordinate deviation check enforced to zero (strict) \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+A B-Rep is considered valid if it passes the solid modeling kernel's validation checks: all edges are shared by exactly 2 faces (no dangling edges), the topology forms a closed manifold (watertight), and geometric primitives lie within valid numerical precision.

@@ -70,10 +70,20 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 Key advantages: (1) Single unified architecture vs. multi-stage pipeline, (2) 2--5$\times$ faster inference via next-token prediction, (3) Native support for B-Rep completion through next token prediction, (4) Scalability to 100+ face solids.
 
 %===============================================================
-\subsubsection{NeuroNurbs: Surface Embeddings}
+\subsubsection{NeuroNurbs: NURBS Parameter Encoding}
 %===============================================================
 
-Alternative to point clouds, \cite{Fan2024neuronurbs} proposes NeuroNurbs, which learns latent embeddings of surfaces using spline parameters directly. While this approach offers interpretable surface representations, it is less mature than BrepGen and AutoBrep for full B-Rep generation and was not pursued in this work. However, it represents an important direction for surface-aware generative models.
+\cite{Fan2024neuronurbs} proposes NeuroNURBS, which learns surface representations by directly encoding NURBS parameters (control points, knot vectors, weights) rather than sampling UV-grids. This native representation reduces memory consumption by 79.9\% and GPU training requirements by 86.7\% compared to UV-grid methods. When integrated into BrepGen (yielding NURBS-Gen), it produces smoother surfaces without undulation artifacts and improves FID from 30.04 to 27.24. While offering computational efficiency gains, NeuroNURBS was not pursued in this work due to focus on autoregressive methods. However, it represents a promising direction for memory-efficient B-Rep generation.
+
+%===============================================================
+\subsubsection{HoLa: Holistic Latent Representation}
+%===============================================================
+
+\cite{Liu2025hola} introduces HoLa, a diffusion-based approach that unifies B-Rep geometry and topology in a single latent space. The key innovation is observing that all curves in a B-Rep arise from surface intersections, enabling HoLa to infer curve and vertex primitives from surface pairs via a neural intersection module. This eliminates the need for separate latent spaces and decoders for different primitive types, as used in methods like BrepGen.
+
+HoLa employs a VAE encoding followed by a latent diffusion model for conditional generation from point clouds, images, sketches, and text. The holistic representation achieves 82\% validity on complex solids compared to $\approx$50\% for multi-stage diffusion approaches, and supports diverse conditioning modalities with a single trained model.
+
+For domain-specific fine-tuning, HoLa's structured geometry-topology encoding may offer advantages over purely autoregressive approaches: the explicit intersection module could provide stronger inductive biases for preserving topological validity during adaptation, potentially complementing LoRA-based approaches for future work.
 
 %===============================================================
 \subsection{Low-Rank Adaptation (LoRA)}

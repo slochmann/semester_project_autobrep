@@ -292,7 +292,7 @@ def sample_during_training(
     batch_cad_data = AutoRegressiveSampler.convert_to_cad_data(batch_decoded)
     builders = [
         AutoBrepBuilder(
-            device=device, z_threshold=0.5, vertex_threshold=0.02, sewing_tolerance=1e-4
+            device=device, z_threshold=0.002, vertex_threshold=0.002, sewing_tolerance=0.002
         )
     ]
 
