@@ -2,7 +2,7 @@
 \label{chap:methodology}
 
 %===============================================================
-\subsection{AutoBrep Model Architecture}
+\subsection{AutoBrep Transformer Architecture}
 %===============================================================
 
 AutoBrep is a decoder-only transformer model with approximately 1 billion parameters, designed for autoregressive generation of Boundary Representations (B-Reps). The architecture consists of:
@@ -90,8 +90,8 @@ The resulting parquet dataset contains serialized geometry tensors (faces, edges
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.66\textwidth]{figures/step_train.png}
-	\caption{Raw .step file renderings from the generic cylinders with holes dataset provided by Manukai}
+	\includegraphics[width=0.5\textwidth]{figures/step_train.png}
+	\caption{Raw .step file renderings of the generic cylinders with holes dataset provided by Manukai}
 	\label{fig:raw}
 \end{figure}
 
@@ -99,7 +99,7 @@ The resulting parquet dataset contains serialized geometry tensors (faces, edges
 	\centering
 	\includegraphics[width=0.5\textwidth]{figures/parquet_sample_016.png}
 	\includegraphics[width=0.49\textwidth]{figures/parquet_sample_026.png}
-	\caption{Two examples of preprocessed point cloud solids from the generic cylinders with holes}
+	\caption{Two examples of preprocessed point cloud solids of the generic cylinders with holes}
 	\label{fig:preprocessed}
 \end{figure}
 
@@ -109,10 +109,9 @@ The resulting parquet dataset contains serialized geometry tensors (faces, edges
 \subsection{Training Setup}
 %===============================================================
 
-Fine-tuning is performed using the AdamW optimizer on the frozen base model with LoRA adapters as the only trainable parameters. Hyperparameter selection follows established LoRA fine-tuning practices \cite{Hu2021lora, UnSloth2024lora}.
+Fine-tuning is performed using the AdamW optimizer on the frozen base model with LoRA adapters as the only trainable parameters. Hyperparameter selection in table \ref{tab:training_hyperparams} follows established LoRA fine-tuning practices \cite{Hu2021lora, UnSloth2024lora}.
 \par
 
-\textbf{Hyperparameters:}
 \begin{table}[h!]
 	\centering
 	\caption{Training Hyperparameters following \cite{Hu2021lora}}
@@ -134,38 +133,37 @@ Fine-tuning is performed using the AdamW optimizer on the frozen base model with
 
 \par
 
+\textbf{GPU Memory Optimization:} Training on a single RTX 4090 GPU (24 GB) was enabled through three techniques: (1) casting the model to bfloat16 precision to reduce memory overhead, (2) using PyTorch's expandable memory segments
+\newline (\texttt{PYTORCH\_ALLOC\_CONF=expandable\_segments:True}) to avoid fragmentation, and (3) periodic GPU cache cleanup (\texttt{torch.cuda.empty\_cache()}) every 10 batches. These techniques allowed efficient training without requiring gradient accumulation.
+
+\par
+
 The train and validation loss function is computed using cross-entropy loss from the AutoBrep module, which measures the divergence between predicted and ground-truth token distributions.
 
-Training is monitored via Weights \& Biases (W\&B) for real-time loss tracking, learning rate schedules, and system metrics. Convergence is typically achieved when training loss plateaus (typical range: 0.8--1.0); further loss reduction risks overfitting to the limited fine-tuning dataset, as evidenced by diverging validation loss.
+Training is monitored via Weights \& Biases (W\&B) for real-time loss tracking, learning rate schedules, and system metrics.
 
 %===============================================================
 \subsection{Inference and B-Rep Generation}
 %===============================================================
 
-During inference, the fine-tuned model generates B-Rep sequences autoregressively, conditioned on a complexity token. Generation is controlled via temperature sampling; top-$p$ (nucleus) sampling is kept constant at 0.95 to ensure diverse yet reasonable outputs. Already during training unconditional samples are created after each epoch.
-
-\par
-
-\textbf{Inference parameters:}
-\begin{itemize}
-	\item \textbf{Complexity Token}: Controls generation preference, 14 (less than 25 faces), 15 (less than 50 faces), 16 (more than 50 faces), 17=random complexity
-	\item \textbf{Temperature}: Controls sampling diversity; lower values ($T = 0.5-0.7$) yield more deterministic outputs similar to the fine-tuning data, while higher values ($T > 0.8$) produce more diverse samples
-\end{itemize}
-
-Generated sequences are converted back to CAD-compatible formats (e.g., STEP files) for evaluation and visualization.
-
-\textbf{B-Rep Reconstruction and Validation:}
-
-Token sequences are decoded into geometric primitives (surfaces, curves) and topological relationships via the FSQ-VAE decoders. The reconstructed B-Rep geometry is then validated and assembled into watertight solids using the AutoBrepBuilder with the following numerical tolerances:
+During inference, the fine-tuned model generates B-Rep sequences autoregressively, conditioned on a complexity token. Generation is controlled via temperature sampling; top-$p$ (nucleus) sampling is kept constant at 0.95 to ensure diverse yet reasonable outputs. During training unconditional samples are created after each epoch.
+Token sequences are decoded into geometric primitives (surfaces, curves) and topological relationships via the FSQ-VAE decoders. The reconstructed B-Rep geometry is then validated and assembled into watertight solids (STEP files) using the AutoBrepBuilder with the following parameters:
 
 \begin{table}[h!]
 	\centering
-	\caption{B-Rep Reconstruction Tolerances}
+	\caption{Inference and B-Rep Reconstruction Parameters}
 	\label{tab:reconstruction_tolerances}
 	\small
 	\begin{tabularx}{\textwidth}{@{}l l l@{}}
 		\toprule
 		\textbf{Parameter} & \textbf{Value} & \textbf{Interpretation} \\
+		\midrule
+		\multicolumn{3}{l}{\textit{Inference Control}} \\
+		\midrule
+		Complexity Token & 14--17 & 14: $<$25 faces, 15: $<$50 faces, 16: $>$50 faces, 17: random \\
+		Temperature & 0.3--0.8 & Controls sampling diversity; 0.5--0.7 found optimal for fidelity+diversity \\
+		\midrule
+		\multicolumn{3}{l}{\textit{Reconstruction Tolerances}} \\
 		\midrule
 		Sewing Tolerance & $2 \times 10^{-3}$ & Max distance for edge-face sewing (watertightness) \\
 		Vertex Threshold & $2 \times 10^{-3}$ & Max separation for vertex merging \\
@@ -174,4 +172,4 @@ Token sequences are decoded into geometric primitives (surfaces, curves) and top
 	\end{tabularx}
 \end{table}
 
-A B-Rep is considered valid if it passes the solid modeling kernel's validation checks: all edges are shared by exactly 2 faces (no dangling edges), the topology forms a closed manifold (watertight), and geometric primitives lie within valid numerical precision.
+A B-Rep is considered valid if it passes the solid modeling kernel's validation checks: all edges are shared by exactly 2 faces (no dangling edges) and the topology forms a closed manifold (watertight) within tolerances.

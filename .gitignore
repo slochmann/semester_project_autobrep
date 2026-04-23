@@ -13,6 +13,7 @@ parquet_samples
 preprocessed_images
 model
 local_LoRA_tests
+step_samples_finetuned
 
 ## Latex
 # Ignore ALL compiled files and artifacts

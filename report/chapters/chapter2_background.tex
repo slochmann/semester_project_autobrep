@@ -2,7 +2,7 @@
 \label{chap:background}
 
 %===============================================================
-\subsection{B-Representation (B-Rep) Fundamentals}
+\subsection{Boundary-Representation Fundamentals}
 %===============================================================
 
 The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces, enabling precise geometric modeling widely used in industrial design, mechanical engineering, and manufacturing. The key components include faces, edges, and vertices, along with their topological relationships. B-Reps employ explicit surface representations using parametric equations (e.g., Non-Uniform Rational Basis Splines), enabling precise surface definition and manipulation. They maintain topological consistency by preserving relationships between geometric elements, ensuring valid and watertight solid structures. As an industry standard, B-Reps are widely supported by professional CAD software including Autodesk, Solidworks, and FreeCAD, providing the high precision necessary for manufacturing applications and detailed design specifications.
@@ -24,7 +24,7 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/brepgen_encoding.png}
-	\caption{BrepGen encoding: B-reps are converted into point clouds with 32×32 samples per face and 32 per edge, organized in a hierarchical tree encoding topology}
+	\caption{BrepGen encoding: B-reps are converted into point clouds with 32×32 samples per face and 32 per edge, organized in a hierarchical tree encoding topology \cite{Xu2024brepgen}}
 	\label{fig:brepgen_encoding}
 \end{figure}
 
@@ -33,7 +33,7 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/brepgen_model.png}
-	\caption{BrepGen generation: Multi-stage diffusion with separate denoisers for faces (bounding boxes) and edges, conditioned on intermediate face predictions}
+	\caption{BrepGen generation: Multi-stage diffusion with separate denoisers for faces (bounding boxes) and edges, conditioned on intermediate face predictions \cite{Xu2024brepgen}}
 	\label{fig:brepgen_model}
 \end{figure}
 
@@ -59,7 +59,7 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=1\textwidth]{figures/autobrep_scheme.png}
+	\includegraphics[width=0.8\textwidth]{figures/autobrep_scheme.png}
 	\caption{AutoBrep architecture: Point clouds are VAE-encoded into discrete tokens, sequenced via BFS, then passed to a GPT-like causal-masked transformer for next-token prediction. Blue boxes, arrows and sequence part corresponds to bounding box.}
 	\label{fig:scheme}
 \end{figure}
@@ -91,24 +91,13 @@ For domain-specific fine-tuning, HoLa's structured geometry-topology encoding ma
 
 LoRA (Low-Rank Adaptation) is a parameter-efficient fine-tuning technique introduced by \cite{Hu2021lora}. Rather than fine-tuning all model parameters, LoRA introduces small trainable low-rank decompositions in the projection matrices of attention layers within a Transformer. This approach dramatically reduces memory requirements and training time while maintaining competitive or superior performance relative to full fine-tuning.
 
-\par
-
-\textbf{Core Mechanism:}
-
-The fundamental idea is to decompose weight updates as a product of two low-rank matrices:
-\[
-W' = W_0 + \Delta W = W_0 + AB^T
-\]
-where $W_0 \in \mathbb{R}^{d_{\text{out}} \times d_{\text{in}}}$ is the frozen pre-trained weight matrix, $A \in \mathbb{R}^{d_{\text{out}} \times r}$, $B \in \mathbb{R}^{d_{\text{in}} \times r}$, and $r \ll d_{\text{in}}, d_{\text{out}}$ (rank) is a small hyperparameter. During fine-tuning, only $A$ and $B$ are trainable, while $W_0$ remains frozen.
-
-\par
-
-This approach is very compute and memory efficient by only adding adapters of around 1\% model size to the base model without modifying it.
+The fundamental idea is to decompose weight updates as a product of two low-rank matrices which are then added to the frozen pre-trained weights Fig~\ref{fig:lora}.
+This approach is very compute and memory efficient by only adding adapters of around 1\% model size to the base model while keeping base model weights constant.
 
 \begin{figure}[h]
 	\includegraphics[width=0.76\textwidth]{figures/lora.png}
 	\centering
-	\caption{LoRA adapters are added in the attention layers to the query and valuey weight matrices \cite{Hu2021lora}.}
+	\caption{Full fine-tuning vs LoRA adaptation \cite{Hu2021lora}.}
 
 	\label{fig:lora}
 \end{figure}

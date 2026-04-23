@@ -11,13 +11,12 @@ This work systematically investigates the application of Low-Rank Adaptation (Lo
 
 \textbf{Central Finding: LoRA as Distribution Sharpener}
 
-The primary empirical finding is that LoRA functions as a \emph{distribution sharpener} rather than a distribution shifter. On 600-sample training sets of cylinders and cubes with holes, LoRA concentrates probability mass onto modes already represented in the base model's learned feature space. After 3--7 epochs of training with learning rates between $10^{-5}$ and $10^{-4}$, the fine-tuned model consistently amplified characteristic training features (e.g., cylindrical geometry, hole patterns) while achieving approximately 90\% decodability across all inference temperatures ($T \in [0.3, 0.8]$). However, the fine-tuned model did not generate exact reproductions of training data shapes, but rather sampled variations around the amplified modes.
+As demonstrated in Section~\ref{sec:lora_dynamics}, LoRA functions as a \emph{distribution sharpener} rather than a distribution shifter: it concentrates probability mass onto modes already present in the base model's feature space rather than learning genuinely new geometric features. The fine-tuned model amplified characteristic training features (e.g., cylindrical geometry, hole patterns) without reproducing training shapes exactly, maintaining approximately 90\% decodability throughout.
 
 \textbf{Implications:}
 \begin{itemize}
 	\item \textbf{Feature Space Constraint}: The base model's learned representations fundamentally limit what LoRA can achieve. New geometric features cannot be learned; only existing modes can be concentrated or emphasized.
 	\item \textbf{Data-Efficient Adaptation}: Despite this constraint, LoRA successfully adapted the model to custom domains using only 600 samples, requiring minimal computational resources (single GPU, $\approx$ 0.5 hour training).
-	
 \end{itemize}
 
 %===============================================================
@@ -74,32 +73,15 @@ LoRA adapters cannot introduce geometrically novel features. Through experimenta
 
 \textbf{Adapter Placement and Rank Scaling:}
 
-Results showed that LoRA rank meaningfully impacts adaptation quality up to rank 32:
-\begin{itemize}
-	\item \textbf{Rank Scaling}: Increasing rank from 4 to 8 to 16 up to 32 improved results visibly, with both higher fraction of geometrically similar samples and increased similarity within individual samples.
-	\item \textbf{Saturation Point}: Rank 32 emerged as a saturation point; higher ranks showed negligible additional improvements (see Chapter~\ref{chap:results} for detailed ablations).
-	\item \textbf{Practical Optimum}: LoRA alpha consistently scaled as 4× rank. with a lower alpha, the adapters weren't weighted enough and finetuned features didn't show.
-	\item \textbf{Attention vs. Feed-Forward}: Adding feed-forward adapters to attention-only configurations provided negligible quality improvements despite the increased parameter count, suggesting that attention-layer adaptation is the primary mechanism.
-\end{itemize}
+As detailed in Section~\ref{sec:ablation}, rank scaling improved adaptation quality up to a saturation point, above which higher ranks showed negligible benefit. Similarly, adding feed-forward adapters to attention-only configurations provided no meaningful quality improvement, confirming that attention-layer adaptation is the primary mechanism.
 
 \textbf{Temperature-Robustness Trade-off:}
 
-While temperature variation ($T \in [0.3, 0.8]$) maintained consistent 90\% decodability across the range, it could not recover from fundamental distribution mismatch:
-\begin{itemize}
-	\item Low temperatures ($T \approx 0.3$): Strong mode concentration but minimal output diversity.
-	\item Optimal range ($T \in [0.5, 0.7]$): Best fidelity to training data modes with reasonable diversity.
-	\item High temperatures ($T > 0.8$): Increased diversity but decreased alignment with training distribution.
-	\item Limitation: No temperature setting could recover out-of-distribution features or enable true novel generation.
-\end{itemize}
+Temperature variation maintained consistent decodability across the tested range (see Section~\ref{sec:ablation}) but could not recover from fundamental distribution mismatch. No temperature setting enabled generation of out-of-distribution features or genuinely novel geometry.
 
 \textbf{Overfitting Sensitivity:}
 
-Small training sets (600 samples) are sensitive to hyperparameter choices:
-\begin{itemize}
-	\item \textbf{Learning Rate Criticality}: Rates $> 1 \times 10^{-4}$ caused rapid overfitting with near-zero training loss and degenerate outputs.
-	\item \textbf{Epoch Dependence}: Training for too many epochs resulted in model collapse; optimal convergence at loss $\approx 1.0$ within 3--7 epochs.
-	\item \textbf{Validation Monitoring Essential}: Close train--validation loss separation (within 10--20\%) was required for successful fine-tuning; divergence indicated approaching failure.
-\end{itemize}
+With only 600 training samples, the model was highly sensitive to learning rate and epoch count (see Section~\ref{sec:ablation} for specifics). Continuous monitoring of the train--validation loss gap was essential; divergence reliably indicated approaching model collapse.
 
 %===============================================================
 \subsection{Lessons Learned}

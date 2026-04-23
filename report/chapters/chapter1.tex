@@ -7,7 +7,7 @@
 
 This thesis is conducted at the IDEAL lab in collaboration with Manukai AG, an ETH spinoff developing machine learning models for CAM manufacturing. Manukai faces a critical challenge: they need domain-specific synthetic CAD training data to fine-tune their models, but cannot mix customers' proprietary CAD datasets in their model between companies due to trade secret concerns. Generating high-quality, domain-specific data is therefore essential.
 
-Recently, the state-of-the-art AutoBrep model \cite{Xu2025autobrep} demonstrated superior capabilities in generating Boundary Representations (B-Reps) with higher quality and complexity compared to prior approaches like BrepGen \cite{Xu2024brepgen}. However, directly applying pre-trained generative models to new specialized domains requires either full retraining (computationally expensive and data-intensive) or efficient adaptation techniques. This motivates investigating parameter-efficient fine-tuning using Low-Rank Adaptation (LoRA) to enable rapid domain adaptation with limited data.
+Recently, the state-of-the-art AutoBrep model \cite{Xu2025autobrep} demonstrated superior capabilities in generating Boundary Representations (B-Reps) with higher quality and complexity compared to prior approaches like BrepGen \cite{Xu2024brepgen}. However, directly applying pre-trained generative models to new specialized domains requires either full retraining (computationally expensive and data-intensive) or efficient adaptation techniques. This motivates investigating parameter-efficient fine-tuning using Low-Rank Adaptation (LoRA) to enable rapid domain adaptation with limited data and compute.
 
 
 %===============================================================
@@ -53,9 +53,9 @@ This thesis makes the following contributions to the field of generative design 
 \begin{enumerate}
     \item \textbf{Practical Framework}: An end-to-end implementation of LoRA fine-tuning for AutoBrep, including data preprocessing, training, and inference pipelines
 
-    \item \textbf{Efficiency Analysis}: Empirical demonstration whether domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters and order of 500 samples, enabling fine-tuning with very limited data and without changing the base model's parameters
+    \item \textbf{Viability Analysis}: Empirical demonstration whether domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters and order of 500 samples, enabling fine-tuning with very limited data and without changing the base model's parameters
 
-    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, training curves and experimental procedures enabling future research and practical adoption
+    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, training curves and experimental procedures enabling future research and practical adoption. All code is available at \url{https://github.com/slochmann/semester_project_autobrep}.
 \end{enumerate}
 
 %===============================================================
