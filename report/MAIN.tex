@@ -51,6 +51,12 @@
 \usepackage{multirow}
 % Enables merging of multiple rows in tables with the \multirow command.
 
+% ===============================================================
+% Load pdfpages for including PDF pages
+% ===============================================================
+\usepackage{pdfpages}
+% Enables inclusion of external PDF pages with the \includepdf command.
+
 %===========================================================================
 % The preamble ends here. The main document starts after \begin{document}.
 %===========================================================================
@@ -159,5 +165,11 @@
     % Appendices
     \include{appendix}
     % Includes the content of 'appendix.tex' which should contain any supplementary material or appendices.
+
+    \clearpage
+    % Declaration of Origin
+    \section*{Declaration of Origin}
+    \includepdf[pages=-]{figures/declaration_of_origin.pdf}
+    % Includes the declaration_of_origin.pdf file at the end of the document.
 
 \end{document}
