@@ -5,13 +5,13 @@
 \subsection{Boundary-Representation Fundamentals}
 %===============================================================
 
-The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces, enabling precise geometric modeling widely used in industrial design, mechanical engineering, and manufacturing. The key components include faces, edges, and vertices, along with their topological relationships. B-Reps employ explicit surface representations using parametric equations (e.g., Non-Uniform Rational Basis Splines), enabling precise surface definition and manipulation. They maintain topological consistency by preserving relationships between geometric elements, ensuring valid and watertight solid structures. As an industry standard, B-Reps are widely supported by professional CAD software including Autodesk, Solidworks, and FreeCAD, providing the high precision necessary for manufacturing applications and detailed design specifications.
+The Boundary Representation (B-Rep) is a fundamental data structure in Computer-Aided Design (CAD) systems. B-Reps describe 3D solid objects by explicitly representing their boundary surfaces using parametric equations (e.g. Non-Uniform Rational Basis Splines), enabling precise surface definition. The key components include faces, edges and vertices. They maintain topological consistency by preserving relationships between geometric elements, ensuring valid and watertight solid structures. As an industry standard, B-Reps are widely supported by professional CAD software including Autodesk, Solidworks, and FreeCAD.
 
 %===============================================================
 \subsection{Generative Models for CAD}
 %===============================================================
 
-Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-based and autoregressive methods. This thesis investigates both paradigms to identify the most suitable approach for domain-specific fine-tuning.
+Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-based and autoregressive methods. This section compares the two approaches based on two foundational papers.
 
 %===============================================================
 \subsubsection{BrepGen: Diffusion-Based Approach}
@@ -24,11 +24,11 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=1\textwidth]{figures/brepgen_encoding.png}
-	\caption{BrepGen encoding: B-reps are converted into point clouds with 32×32 samples per face and 32 per edge, organized in a hierarchical tree encoding topology \cite{Xu2024brepgen}}
+	\caption{BrepGen encoding: B-Reps are converted into point clouds with 32x32 samples per face and 32 per edge, organized in a hierarchical tree encoding topology \cite{Xu2024brepgen}}
 	\label{fig:brepgen_encoding}
 \end{figure}
 
-\textbf{Generation Pipeline:} BrepGen employs a multi-stage diffusion approach with six modules (2 VAEs + 4 denoisers). Noise for faces and bounding boxes is denoised sequentially, then conditioned on these refined faces, edge noise is iteratively refined.
+\textbf{Generation Pipeline:} BrepGen employs a multi-stage diffusion approach with six modules (2 VAEs + 4 denoisers). Noise for faces and bounding boxes is denoised sequentially. Conditioned on these refined faces, edge noise is iteratively refined.
 
 \begin{figure}[h!]
 	\centering
@@ -55,7 +55,14 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 
 \cite{Xu2025autobrep} presents AutoBrep, an autoregressive Transformer that unifies B-Rep geometry and topology into a single stream of discrete tokens. Unlike multi-stage diffusion, AutoBrep generates B-Reps end-to-end via next-token prediction, treating CAD generation as a language modeling task.
 
-\textbf{Latent Space Encoding:} AutoBrep uses a VAE to encode the point cloud representation (identical to BrepGen's initial encoding) into discrete tokens using finite scalar quantization with a 1000-word vocabulary. These tokens are then sequenced based on a breadth-first search ordering of the B-Rep's topology, preserving structural relationships.
+\textbf{Latent Space Encoding:} AutoBrep uses a VAE to encode the point cloud representation (identical to BrepGen's initial encoding) into discrete tokens using finite scalar quantization with a 1000-word vocabulary. These tokens are then sequenced based on a breadth-first search \ref{fig:bfs} ordering of the B-Reps topology, preserving structural relationships.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1\textwidth]{figures/bfs.png}
+	\caption{Breadth first search and corresponding token sequence. Pink arrows point from tokens to corresponding faces and edges. Violet arrows point to corresponding topologies \cite{Xu2025autobrep}}
+	\label{fig:bfs}
+\end{figure}
 
 \begin{figure}[h!]
 	\centering
@@ -63,8 +70,6 @@ Two complementary approaches have emerged for direct B-Rep synthesis: diffusion-
 	\caption{AutoBrep architecture: Point clouds are VAE-encoded into discrete tokens, sequenced via BFS, then passed to a GPT-like causal-masked transformer for next-token prediction. Blue boxes, arrows and sequence part corresponds to bounding box.}
 	\label{fig:scheme}
 \end{figure}
-
-\par
 
 
 Key advantages: (1) Single unified architecture vs. multi-stage pipeline, (2) 2--5$\times$ faster inference via next-token prediction, (3) Native support for B-Rep completion through next token prediction, (4) Scalability to 100+ face solids.

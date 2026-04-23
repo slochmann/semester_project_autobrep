@@ -32,15 +32,13 @@ This work addresses these challenges by investigating \textit{parameter-efficien
 
 \par
 
-\textbf{``Can large pre-trained generative CAD models like AutoBrep from \cite{Xu2025autobrep} be efficiently adapted to specialized design domains with limited data using Low Rank Adaptation?''}
-
-To answer this, we:
 \begin{enumerate}
-    \item Implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model
-    \item Demonstrate domain-specific adaptation on custom CAD datasets
-    \item Analyze scalability of multiple LoRA adapters for different domains
-    \item Evaluate practical utility and limitations of the approach
+    \item What are the \textbf{capabilities and limitations} for the AutoBrep CAD GPT model published by \cite{Xu2025autobrep}?
+    \item Can the model be efficiently \textbf{adapted to specialized design domains} with limited data?
+    \item Does the model allow for sequential or sparse \textbf{(auto)completion} of solids?
 \end{enumerate}
+
+To answer this, we implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model, deploy it on Euler GPU's, explore hyperparameters, tracking with W\&B. Additionally, we try out (auto)completion. Eventually we evaluate our results.
 
 %===============================================================
 \subsection{Contributions}
