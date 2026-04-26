@@ -1,36 +1,16 @@
 \section{Conclusion}
 \label{chap:conclusion}
 
-%===============================================================
-\subsection{Summary of Findings}
-%===============================================================
+This thesis investigated parameter-efficient domain adaptation of the AutoBrep generative CAD model \cite{Xu2025autobrep} using Low-Rank Adaptation (LoRA) \cite{Hu2021lora}, focusing on three research questions. Through systematic experimentation we find that:
 
-This thesis systematically investigates Low-Rank Adaptation (LoRA) for domain-specific fine-tuning of the AutoBrep generative CAD model. As demonstrated in Chapter~\ref{chap:results}, the central finding is that LoRA functions as a \emph{distribution sharpener} rather than a distribution shifter: it concentrates probability mass onto geometric modes already present in the base model's feature space rather than learning genuinely novel features. Working with 600-sample datasets of cylindrical and cubic solids with holes, fine-tuned models consistently achieved approximately 90\% decodability into valid STEP files. Detailed hyperparameter findings---including the dominant role of learning rate, the rank saturation point, and the negligible benefit of feed-forward adapters---are reported in Section~\ref{sec:ablation}.
+\begin{enumerate}
+	\item \textbf{AutoBrep's base capabilities} far exceed prior diffusion-based methods (Chapter~\ref{chap:results}), producing watertight, topologically complex solids with up to 100+ faces in a single autoregressive pass.
+	
+	\item \textbf{LoRA enables rapid, data-light adaptation} to specialized domains (cylinders, cuboids with holes) using only $\approx$1\% additional parameters and 600 training samples, achieving $\approx$90\% decodable-solid rate. However, LoRA acts strictly as a \emph{distribution sharpener} (Section~\ref{sec:lora_dynamics}): it can amplify geometric motifs already present in the base model's latent feature space but cannot introduce genuinely novel primitives. Adapter placement and rank beyond $r=16$ yield negligible gains, confirming that the bottleneck lies in the base model's pre-trained geometry coverage, not in adapter capacity.
+	
+	\item \textbf{Sequence completion tasks fail} across all fine-tuning regimes (Section~\ref{sec:sequence_completion}). Despite the causal transformer architecture, the unconditional pre-training objective left the model unable to infer missing geometry from partial token sequences---an effect that LoRA cannot remedy without explicit conditional training objectives.
+\end{enumerate}
 
-%===============================================================
-\subsection{Key Insights}
-%===============================================================
+\par
 
-Three fundamental constraints emerged from this investigation, discussed in detail in Chapter~\ref{chap:discussion}. First, the base AutoBrep checkpoint was trained unconditionally without geometry tokens, preventing arbitrary conditional generation or sequence continuation. Second, the discrete tokenization vocabulary is sufficient for smooth reconstruction but may constrain representability of specialized feature types outside the base model's training distribution. Third, and most fundamentally, LoRA adapters cannot introduce geometrically novel features: the base model must already contain the target geometric features in distributed form for effective adaptation.
-
-These constraints explain why LoRA fine-tuning, despite its computational efficiency, remains bounded by the base model's learned feature space. On simple geometric primitives, LoRA successfully amplified characteristic training features with minimal overhead (single GPU, 0.5 hours). This effectiveness did not extend to features outside the base model's scope.
-
-%===============================================================
-\subsection{Practical and Methodological Contributions}
-%===============================================================
-
-This work establishes guidelines for practitioners attempting domain-specific fine-tuning on limited datasets. The successful adaptation of 600-sample datasets suggests this scale represents a baseline for simple geometric domains. Conservative hyperparameter selection with continuous monitoring of train–validation loss separation proved essential for avoiding overfitting. Real-time loss tracking via Weights \& Biases enabled early detection of model degradation, while periodic inference sampling during training revealed mode collapse before final convergence.
-
-%===============================================================
-\subsection{Scope and Limitations}
-%===============================================================
-
-The experiments were limited to simple geometric primitives (cylinders and cuboids with holes) on datasets of 600 samples. Generalization to more complex assemblies, irregular geometries, or larger datasets requires further investigation. The evaluation focused on decodability rates and visual similarity rather than functional metrics like manufacturability or structural validity. Additionally, this work examined only the provided AutoBrep checkpoint without retraining the base model or exploring conditional training with geometry tokens enabled, which could potentially overcome some identified architectural constraints.
-
-%===============================================================
-\subsection{Conclusion}
-%===============================================================
-
-This thesis demonstrates that LoRA enables practical, data-efficient fine-tuning of large generative CAD models. For practitioners with limited computational resources and domain-specific adaptation needs, LoRA provides a viable pathway to leverage pre-trained models without prohibitive computational costs. The identified constraints—bounded feature space, unconditional training architecture, and limited vocabulary—are not fundamental failures of LoRA but rather reflect the base model's design choices. Future work addressing these constraints through conditional retraining, larger base models and training sets, or alternative architectures could substantially expand the scope of what fine-tuning can achieve.
-
-The methodologies, hyperparameter guidelines, and empirical findings presented in this thesis establish a foundation for continued research in parameter-efficient fine-tuning of generative CAD models. As generative AI becomes increasingly prevalent in design automation, efficient adaptation techniques will prove essential for making advanced design tools accessible across organizations and domains.
+In essence, LoRA fine-tuning of AutoBrep solves the practical problem of \emph{style-consistent generation} within a known shape language when the domain's geometric vocabulary already exists in the base model. It does \textbf{not} solve the problem of learning topologies absent from the original training data, nor does it enable (auto)completion without explicit training modifications (see Chapter~\ref{chap:discussion}).

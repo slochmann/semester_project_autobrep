@@ -130,7 +130,7 @@ if __name__ == "__main__":
         process_single_file(step_file, output_dir)
     else:
         # Main process: find and spawn subprocesses for each file
-        step_dir = "./step_samples_finetuned"
+        step_dir = "/home/sebi/MSc/3.Sem/semester_thesis/local-git/semester_project_autobrep/euler_remote_mount/scratch/AutoBrep/checkpoints/600_cylinders_T0.5_comp17_lr3e-5_e4_r32_a128_20260424_154843/samples_step_000528"
         
         # Parse --num-files argument
         num_files = None

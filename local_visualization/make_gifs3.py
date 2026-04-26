@@ -132,5 +132,5 @@ def combine_videos_with_xstack(
 
 # Example usage
 if __name__ == "__main__":
-    create_videos_from_folders("output_images_20260416_222424")
-    combine_videos_with_xstack("output_images_20260416_222424", grid_size=6, tile_size=800)
+    #create_videos_from_folders("output_images_20260424_162618")
+    combine_videos_with_xstack("output_images_20260424_162618", grid_size=5, tile_size=800)

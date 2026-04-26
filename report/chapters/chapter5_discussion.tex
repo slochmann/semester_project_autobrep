@@ -1,19 +1,36 @@
-\section{Discussion and Limitations}
+\section{Discussion of Research Questions}
 \label{chap:discussion}
 
-The results presented in Chapter~\ref{chap:results} reveal critical insights regarding the capabilities and constraints of parameter-efficient fine-tuning for generative CAD models. While LoRA enables highly data-efficient adaptation---requiring as few as 600 samples and minimal computational overhead---its effectiveness is strictly bounded by the representations already present in the base model's feature space. 
-
 %===============================================================
-\subsection{Distribution Constraints and Model Architecture}
+\subsection{RQ1: Capabilities and Limitations of AutoBrep}
 %===============================================================
 
-Because LoRA acts as a distribution sharpener rather than a distribution shifter, adapters can only amplify and concentrate existing modes. Consequently, the base model must already contain distributed representations of the target geometric features for successful fine-tuning. This explains why simple geometric primitives fine-tuned more effectively than complex, irregular shapes that fell outside the base distribution. Temperature scaling during inference proved robust in maintaining decodability but failed to induce the generation of genuinely out-of-distribution features. Additionally, the limited geometry and edge vocabulary (2000 tokens) inherent to AutoBrep's Finite Scalar Quantization limits the shape variety representable when predicting specialized domains.
+The base AutoBrep checkpoint demonstrates impressive capabilities for unconditional B-Rep generation. As shown in Fig.~\ref{fig:untuned_samples}, the model generates coherent, geometrically complex solids with 50--100+ faces and diverse topological structures. These structures are typically watertight, substantially outperforming prior diffusion-based approaches like BrepGen.
 
-Beyond representational bandwidth, specific architectural choices within the provided AutoBrep checkpoint fundamentally constrain the fine-tuned model's utility for interactive design tasks. The checkpoint was trained unconditionally and with geometry tokens disabled. This setup precludes arbitrary subset conditioning: the model fails to generate valid B-Reps when prompted with non-consecutive topological tokens and exhibits ambiguous capabilities for standard autoregressive completion without causing generation failures. Without explicit conditional training objectives, the interdependency modeling between faces and edges remains suboptimal for constrained generation.
 
 %===============================================================
-\subsection{Methodological Trade-Offs}
+\subsection{RQ2: Efficient Domain Adaptation with Limited Data}
 %===============================================================
 
-The architectural constraints of AutoBrep frame a broader trade-off in generative CAD. Diffusion-based methods, such as BrepGen, natively support continuous conditioning and flexible generation. However, they frequently produce invalid geometries when applied to high-complexity solids. In contrast, AutoBrep's autoregressive approach maintains high decodability and structural validity across a broad complexity scale but lacks the conditional malleability required for targeted design workflows. Furthermore, the discrete tokenization model is highly sensitive to overfitting under limited data regimes. As observed during training, divergence between training and validation loss reliably preceded model collapse, requiring tight calibration of learning rates.
+LoRA successfully enables data-efficient fine-tuning to specialized domains. With only 600 samples of cylindrical or cuboid solids, fine-tuned models achieved $\approx$90\% decodability into valid STEP files, requiring minimal computational overhead (single GPU, $\approx$0.5 hours). 
+
+However, LoRA functions as a \emph{distribution sharpener} rather than a distribution shifter: it concentrates probability mass onto geometric modes already present in the base model rather than learning genuinely novel features. This means the base model must already contain (in distributed form) the characteristics of the fine-tuning domain. 
+
+%===============================================================
+\subsection{RQ3: Sequential and Sparse (Auto)completion}
+%===============================================================
+
+Despite using causal masking architecturally, the base model fails at sequence completion tasks. When provided with partial B-Rep sequences (e.g., 20\% of token sequence of training data solid), next-token predictions generate degenerate geometry that does not reconstruct valid solids (Fig.~\ref{fig:sequence_completion}). This failure stems from the unconditional training regime: without explicit masked prediction or conditional objectives during pre-training, the model has not learned to reason about interdependencies between partial geometric constraints.
+
+%===============================================================
+\subsection{Limitations and Future Research}
+%===============================================================
+
+Three key constraints emerged from this investigation:
+
+\begin{itemize}
+	\item \textbf{Conditional / Masked Training}: Retraining with geometry tokens enabled and masked prediction objectives should enable autocompletion and sequence continuation.
+	\item \textbf{Larger Base Models}: Larger models trained on more data would contain richer feature spaces, potentially expanding what LoRA adapters can amplify.
+	\item \textbf{Combined Transformer-Diffusion Architecture}: Combining autoregressive generation (long-range dependencies) with diffusion-based refinement (probability distribution shaping) might overcome mode-concentration limitations, as demonstrated in state-of-the-art image generation.
+\end{itemize}
 

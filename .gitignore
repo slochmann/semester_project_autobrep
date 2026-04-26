@@ -30,7 +30,6 @@ report/*.toc
 report/*.lof
 report/*.lot
 report/*.run.xml
-report/MAIN.pdf
 report/**/*.aux
 
 weekly_status
