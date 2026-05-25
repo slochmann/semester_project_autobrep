@@ -5,22 +5,17 @@
 \subsection{Baseline Inference}
 %===============================================================
 
-In Fig.~\ref{fig:untuned_samples} we can see that the unmodified AutoBrep model indeed generates impressive B-Rep's with high complexity and apparent correctness. Each of these STEP samples were rendered from various angles and concatenated in a GIF showing them from all directions for inspection.
+In Fig.~\ref{fig:untuned_samples} we can see that the unmodified AutoBrep model indeed generates impressively complex and watertight B-Reps. Each of these STEP samples was rendered from various angles and concatenated in a GIF showing them from all directions for inspection.
+
+The generated solid structures appear coherent with few exceptions of small gaps between faces or non-sensical structure in $<10\%$ of samples.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.66\textwidth]{figures/untuned_medium.png}
-	\includegraphics[width=0.66\textwidth]{figures/untuned_hard.png}
-	\caption{Examples of unconditional samples generated with the untuned base model checkpoint. Top with medium complexity (25 to 50 faces per shape) and bottom with high complexity (50+ faces per shape).}
+	\includegraphics[width=0.49\textwidth]{figures/untuned_medium.png}
+	\includegraphics[width=0.49\textwidth]{figures/untuned_hard.png}
+	\caption{Examples of unconditional samples generated with the untuned base model checkpoint. Left with medium complexity (25 to 50 faces per shape) and right with high complexity (50+ faces per shape).}
 	\label{fig:untuned_samples}
 \end{figure}
-
-Generated models demonstrate:
-\begin{itemize}
-	\item \textbf{Geometric Validity}: Faces and edges form coherent solid structures
-	\item \textbf{Diversity}: Multiple samples exhibit varied feature combinations
-	\item \textbf{Domain Adherence}: Generated geometry aligns with training domain characteristics
-\end{itemize}
 
 %===============================================================
 \subsubsection{Comparison with BrepGen}
@@ -30,8 +25,8 @@ To contextualize AutoBrep's performance, we compare it with BrepGen, the predece
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.66\textwidth]{figures/BrepGen.png}
-	\caption{Representative samples generated with BrepGen (diffusion-based approach) from unconditional generation. While geometrically valid, BrepGen produces predominantly simple geometries with low complexity: mainly cylinders and cuboids with chamfers and holes. This limitation in generated geometric diversity motivated the selection of AutoBrep, which generates higher-complexity solids with more varied topological structures.}
+	\includegraphics[width=0.666\textwidth]{figures/BrepGen.png}
+	\caption{Representative samples generated with BrepGen (diffusion-based approach) from unconditional generation. While geometrically valid, BrepGen produces predominantly simple geometries with low complexity.}
 	\label{fig:brepgen_samples}
 \end{figure}
 
@@ -46,25 +41,23 @@ AutoBrep offers several key advantages over BrepGen: higher geometric complexity
 
 The LoRA fine-tuning process was conducted on custom CAD model datasets, following the training setup and hyperparameters specified in Chapter~\ref{chap:methodology}.
 
-\textbf{Training Strategy:} A key finding was that maintaining validation loss close to training loss was essential for avoiding both underfitting and overfitting. This was achieved by targeting a training loss of approximately 1.0, which empirically provided the optimal balance.
-
 \textbf{Observed Training Characteristics:}
 \begin{itemize}
-	\item Training loss consistently converged toward target of 1.0 within 3--7 epochs across all datasets tested
-	\item Validation loss tracked closely with training loss when hyperparameters were properly tuned (typically within 10--20\% separation)
-	\item Learning rate emerged as the dominant control parameter: too high rates ($> 1 \times 10^{-4}$) caused rapid overfitting with near-zero training loss and degenerate model outputs
-	\item LoRA rank and temperature had minimal influence on training convergence dynamics
-	\item Gradient accumulation and bfloat16 casting proved sufficient for training on single GPU without memory issues
+	\item Best results were around a loss of 1.0 within 3--7 epochs for 600 samples
+	\item Validation loss tracked closely with training loss (typically within 10--20\% separation)
+	\item LoRA rank had minimal influence on training convergence dynamics
 \end{itemize}
 
 Training and validation loss curves are shown in Fig.~\ref{fig:training_loss}.
 
 \begin{figure}[h!]
 	\centering
-	\fbox{\texttt{[Insert training/validation loss curves from W\&B export]}}
-	\caption{Training and Validation Loss Over Epochs for Representative LoRA Fine-Tuning Run. Model converges toward target loss of 1.0, with validation loss tracking training loss closely.}
+	\includegraphics[width=1.0\textwidth]{figures/loss_lr_selection.png}
+	\includegraphics[width=1.0\textwidth]{figures/100_runs_lr_loss.png}
+	\caption{Training dynamics for representative and aggregated runs. Top: three selected configurations showing convergence toward loss $\approx 1.0$ with validation loss tracking within 10--20\% separation. Bottom: overlaid trajectories from 100 experimental runs demonstrating robust convergence patterns across hyperparameter variations.}
 	\label{fig:training_loss}
 \end{figure}
+
 
 %===============================================================
 \subsection{Empirical Findings on LoRA Fine-Tuning Dynamics}
@@ -73,34 +66,33 @@ Training and validation loss curves are shown in Fig.~\ref{fig:training_loss}.
 
 \textbf{LoRA Behavior as Distribution Sharpener:} Through systematic experimentation, LoRA was observed to function as a \emph{distribution sharpener} rather than a distribution shifter. When applied to attention layers alone, LoRA concentrates probability mass on modes already present in the base model's feature space, but cannot learn genuinely novel geometric features outside this space. This fundamentally constrains what fine-tuning can achieve: the base model must already contain (in distributed form) the geometric features present in the fine-tuning data.
 
-\textbf{Effect of Adapter Placement:} Experiments comparing attention-only adapters (as specified in Chapter~\ref{chap:methodology}, Table~\ref{tab:lora_params}) with attention + feed-forward adapters revealed minimal differences in output quality or decodability. Figure~\ref{fig:lora_adapters_comparison} illustrates the marginal improvement from adding feed-forward adapters. This finding supports the hypothesis that most adaptation occurs through attention weight redistribution, with feed-forward layers providing limited additional benefit.
-
-\begin{figure}[h!]
-	\centering
-	\fbox{\texttt{[Insert comparison: attention-only LoRA vs. attention+FF LoRA at T=0.6]}}
-	\caption{LoRA Adapter Configuration Comparison. Left: attention-only adapters. Right: attention + feed-forward adapters. Addition of FF adapters provides minimal visible improvement in output quality or diversity.}
-	\label{fig:lora_adapters_comparison}
-\end{figure}
+\textbf{Effect of Adapter Placement:} Experiments comparing attention-only adapters (as specified in Chapter~\ref{chap:methodology}, Table~\ref{tab:lora_params}) with attention + feed-forward adapters revealed minimal differences in output quality or decodability. Figure~\ref{fig:rank_comparison} illustrates the marginal improvement from adding feed-forward adapters. This finding supports the hypothesis that most adaptation occurs through attention weight redistribution, with feed-forward layers providing limited additional benefit.
 
 %===============================================================
 \subsection{Quantitative Evaluation}
 %===============================================================
 
-\textbf{Model Quality Metrics:} Model performance is assessed through multiple quantitative measures derived from training and inference experiments.
-
-\textbf{Decodability Rate:} A critical metric for generative B-Rep models is the fraction of generated sequences that successfully decode into valid solids. Across all fine-tuning runs, the fine-tuned LoRA models achieved approximately 90\% decodability rate under normal inference conditions (temperature $T \in [0.5, 0.8]$). This rate remained high unless the model exhibited signs of overfitting (near-zero training loss due to excessive learning rate or epoch count), in which case generated sequences became degenerate and decoding failed completely.
+\textbf{Decodability Rate:} A critical metric for generative B-Rep models is the fraction of generated sequences that successfully decode into valid solids. Across all fine-tuning runs, the fine-tuned LoRA models achieved approximately 80\% decodability rate when tuning hyperparameters appropriately. This rate remained high unless the model exhibited signs of overfitting, in which case generated sequences became degenerate and decoding failed completely.
 
 \textbf{Temperature Sensitivity:} Inference temperature was varied across the range $T \in [0.3, 0.8]$ to assess its impact on output diversity and fidelity to training data. Key findings:
 
 \begin{itemize}
-	\item \textbf{Low temperature ($T \approx 0.3$)}: Model outputs concentrated on the most probable modes, with minimal diversity. Strong LoRA effect.
-	\item \textbf{Optimal range ($T \in [0.5, 0.7]$)}: Best balance between resemblance to training data and geometric diversity. Results showed prominent training features (e.g., holes, cylinders, cubes) but not exact reproductions of training shapes.
-	\item \textbf{High temperature ($T > 0.8$)}: Increased diversity but reduced fidelity to training distribution. Model samples from broader set of modes beyond training data.
+	\item \textbf{Low temperature ($T \approx 0.3$)}: Model outputs concentrated on the most probable modes, with minimal diversity. Strong LoRA effect but only most basic cylinders / cuboids without any features like holes.
+	\item \textbf{Optimal range ($T \in [0.5, 0.7]$)}: Best balance between resemblance to training data and geometric diversity. Results showed prominent training features (e.g., holes, cylinders, cuboids) but not exact reproductions of training shapes.
+	\item \textbf{High temperature ($T > 0.8$)}: Increased diversity but reduced fidelity to training distribution. Model samples from broader set of modes beyond finetuning data.
 \end{itemize}
 
 Temperature had minimal impact on decoding success rate; failures were primarily driven by model overfitting rather than inference temperature.
 
-\textbf{Loss Metrics:} Validation loss provided the primary signal for hyperparameter tuning. The strategy of targeting training loss $\approx 1.0$ successfully maintained reasonable separation between train and validation curves, with typical validation loss within 10--20\% of training loss for well-tuned models.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.41\textwidth]{figures/sampling_success_rate.png}
+	\includegraphics[width=0.49\textwidth]{figures/gpu_memory_usage.png}
+	\includegraphics[width=0.41\textwidth]{figures/100_runs_success_rate.png}
+	\includegraphics[width=0.49\textwidth]{figures/100_runs_gpu_memory.png}
+	\caption{Decodability rate and GPU memory across configurations. Top: The three selected runs's decodability and GPU usage (100$\%$ = 24GB). Bottom: Same for 100 experiments.}
+	\label{fig:performance_metrics}
+\end{figure}
 
 Further evaluation against baseline (untuned AutoBrep) is presented in Section~\ref{sec:ablation}.
 
@@ -110,11 +102,10 @@ Further evaluation against baseline (untuned AutoBrep) is presented in Section~\
 
 Generated B-Reps are visualized and evaluated for geometric plausibility, feature fidelity, and diversity relative to training data.
 
-\textbf{Cylinders with Holes Dataset:} Fine-tuning was performed on 600 cylindrical solids with through-holes. The fine-tuned model produced results featuring:
+\textbf{Cylinders with Holes Dataset:} Fine-tuning was performed on 600 cylindrical solids with random length and diameter and random holes. The fine-tuned model produced results featuring:
 
 \begin{itemize}
-	\item Cylindrical geometry (primary feature)
-	\item Through-holes positioned and sized in plausible locations
+	\item Cylindrical geometry for approximately half of the generated samples
 	\item Variations in hole placement and size
 	\item Decodable, watertight solids in approximately 90\% of samples
 \end{itemize}
@@ -123,26 +114,26 @@ Examples are shown in Fig.~\ref{fig:cylinders_results}.
 
 \begin{figure}[h!]
 	\centering
-	\fbox{\texttt{[Insert 3 representative cylinder-with-holes samples at T=0.6]}}
-	\caption{Qualitative Results: Cylinders with Holes. Fine-tuned LoRA model generates cylindrical solids with through-holes. While not exact reproductions of training data, samples exhibit characteristic training features (cylindrical body, hole placement).}
+	\includegraphics[width=0.8\textwidth]{figures/600_cylinders_T0.6_comp17_lr3e-05_e4_r32_a128_to_q_to_v.jpg}
+	\includegraphics[width=0.5\textwidth]{figures/600_cylinders_T0.6_comp17_lr3e-05_e4_r32_a128_to_q_to_v_step_renderings.png}
+	\caption{Qualitative Results: Cylinders with Holes. Top: Point clouds of faces (coloured) and corresponding edges (black). Bottom: Rendered STEP files. Samples exhibit characteristic training features but are not exact reproductions. LR: $3 \times 10^{-5}$, epochs: 4, rank: 32 (alpha 128), adapters: Q and V, T: 0.6, complexity: 17.}
 	\label{fig:cylinders_results}
 \end{figure}
 
-\textbf{Cubes with Holes Dataset:} Fine-tuning was also performed on 600 cubic solids with holes, producing analogous results:
+\textbf{Cuboids with Holes Dataset:} Fine-tuning was also performed on 600 cuboid solids with random holes, producing analogous results:
 
 \begin{itemize}
-	\item Cubic or near-cubic primary geometry
+	\item Cuboid or near-cuboid primary geometry
 	\item Through-holes with varied placement patterns
 	\item High decodability (approximately 90\%)
-	\item Feature amplification without exact reproduction
 \end{itemize}
 
 Examples are shown in Fig.~\ref{fig:cubes_results}.
 
 \begin{figure}[h!]
 	\centering
-	\fbox{\texttt{[Insert 3 representative cube-with-holes samples at T=0.6]}}
-	\caption{Qualitative Results: Cubes with Holes. Fine-tuned LoRA model generates cubic solids with through-holes. Again demonstrating feature amplification from training data.}
+	\includegraphics[width=0.8\textwidth]{figures/600_cubes_T0.5_comp17_lr5e-05_e4_r32_a128_to_q_to_v.png}
+	\caption{Qualitative Results: Cuboids with Holes. LR: $5 \times 10^{-5}$, epochs: 4, rank: 32 (alpha 128), adapters: Q and V, T: 0.5, complexity: 17.}
 	\label{fig:cubes_results}
 \end{figure}
 
@@ -150,13 +141,35 @@ Examples are shown in Fig.~\ref{fig:cubes_results}.
 
 \begin{figure}[h!]
 	\centering
-	\fbox{\texttt{[Insert side-by-side base model vs. LoRA samples at T=0.6]}}
-	\caption{Base Model vs. LoRA Fine-Tuning. Left: unconditional samples from base AutoBrep model. Right: samples from LoRA fine-tuned on cylinders-with-holes. Note the amplification of cylindrical features in LoRA outputs.}
+	\includegraphics[width=0.95\textwidth]{figures/base_vs_adapted.png}
+	\caption{Base Model vs. LoRA Fine-Tuning at $T=0.6$. Top right: unconditional samples from base AutoBrep model. Bottom left: samples from LoRA fine-tuned on cylinders-with-holes. Arrows indicate corresponding geometries appearing in both outputs, demonstrating that LoRA acts as a distribution sharpener.}
 	\label{fig:base_vs_lora}
 \end{figure}
 
+\textbf{Sequence Completion via Next-Token Prediction:} 
+\label{sec:sequence_completion}
+While the fine-tuned model demonstrates some learning of training-domain geometries, it fails at sequence completion tasks. When provided with partial B-Rep sequences (e.g., only face geometry tokens representing 20\% of the full sequence), the model's next-token predictions generate degenerate edge and face geometry that does not reconstruct valid solids. Figure~\ref{fig:sequence_completion} shows representative examples of these failed completions.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_000_face.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_000_edge.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_001_face.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_001_edge.png}
+	
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_002_face.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_002_edge.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_003_face.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_003_edge.png}
+	
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_004_face.png}
+	\includegraphics[width=0.24\textwidth]{figures/step_000924_sample_004_edge.png}
+	\caption{Failed sequence completion examples. Each row shows input face-geometry (left) and model-predicted edge-geometry (right) for five samples. Despite successful feature learning on complete sequences, the fine-tuned model fails to generate valid B-Rep completions when given partial token sequences (20\% of levels, see \ref{fig:bfs}).}
+	\label{fig:sequence_completion}
+\end{figure}
+
 %===============================================================
-\subsection{Ablation Studies and Hyperparameter Analysis}
+\subsection{Ablation Studies}
 \label{sec:ablation}
 %===============================================================
 
@@ -164,35 +177,11 @@ To understand the contribution of different training and inference components, s
 
 \textbf{LoRA Rank Impact:} Varying LoRA rank $r \in \{16, 32\}$ showed minimal influence on final output quality or convergence behavior. Both configurations achieved similar decodability rates (approximately 90\%) and produced outputs with comparable feature amplification. This suggests that the primary bottleneck is the base model's learned feature space rather than adapter capacity.
 
-\textbf{Learning Rate Sensitivity:} Learning rate emerged as the dominant hyperparameter. The relationship was nonlinear:
-\begin{itemize}
-	\item Too low ($< 1 \times 10^{-5}$): Insufficient adaptation; training loss converged slowly and remained high
-	\item Optimal range ($1 \times 10^{-5}$ to $1 \times 10^{-4}$): Rapid convergence with controlled train--validation loss separation
-	\item Too high ($> 1 \times 10^{-4}$): Rapid overfitting; near-zero loss achieved by memorization, producing degenerate outputs
-\end{itemize}
+Exploration of significantly higher ranks ($r = 200$) combined with feed-forward adapters demonstrated saturation effects. Figure~\ref{fig:rank_comparison} illustrates cylinders-with-holes generation at $r=200$ with feed-forward adapters (learning rate $5 \times 10^{-6}$, alpha 800, temperature 0.7, 4 epochs), compared against the standard configuration ($r=32$, attention-only).
 
-Learning rate was therefore tuned per dataset based on validation loss monitoring.
-
-\textbf{Temperature Impact:} Temperature variation ($T \in [0.3, 0.8]$) had negligible effect on decodability; approximately 90\% of samples remained decodable across the entire range. The effect was primarily on diversity and fidelity (see Section~\ref{sec:quantitative}).
-
-\textbf{Comparison: Baseline vs. LoRA-Tuned:}
-
-\begin{table}[h!]
+\begin{figure}[h!]
 	\centering
-	\caption{Baseline vs. LoRA-Tuned Model Comparison}
-	\label{tab:baseline_comparison}
-	\small
-	\begin{tabularx}{\textwidth}{@{}l X l l@{}}
-		\toprule
-		\textbf{Aspect} & \textbf{Description} & \textbf{Baseline} & \textbf{LoRA-Tuned} \\
-		\midrule
-		Decodability Rate & Fraction of samples decoding to valid solids & $\approx 90\%$ & $\approx 90\%$ \\
-		Feature Fidelity & Adherence to domain characteristics & Broad distribution & Amplified training modes \\
-		Trainable Parameters & Additional parameters required & 0 & $\approx 262$K--$852$K \\
-		Training Time & Time per fine-tuning run & N/A & 1--2 hours (single GPU) \\
-		Domain Specificity & Feature alignment with custom data & Baseline capabilities & Enhanced for fine-tuned domain \\
-		\bottomrule
-	\end{tabularx}
-\end{table}
-
-LoRA fine-tuning introduces minimal parameter overhead (less than 0.1\% of base model) while shifting output distribution toward fine-tuning data modes. Training on datasets of 600 samples converged successfully within 3--7 epochs across both geometry types, with consistent decodability rates maintained.
+	\includegraphics[width=0.95\textwidth]{figures/600_cylinders_T0.7_comp17_lr5e-06_e4_r200_a800_to_q_to_v_ff.png}
+	\caption{LoRA Rank and Adapter Scaling Comparison. Higher rank ($r=200$, alpha 800) with feed-forward adapters vs. baseline attention-only ($r=32$). LR: $5 \times 10^{-6}$, epochs: 4, T: 0.7.}
+	\label{fig:rank_comparison}
+\end{figure}

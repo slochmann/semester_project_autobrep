@@ -1,0 +1,390 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{Fan2024neuronurbs}{article}{}{}
+      \name{author}{4}{}{%
+        {{un=0,uniquepart=base,hash=5a49adb049d8161e83379db9808f0111}{%
+           family={Fan},
+           familyi={F\bibinitperiod},
+           given={Jiajie},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=ef06c4b3b1bc8e8f9f18a6082514d6c5}{%
+           family={Gholami},
+           familyi={G\bibinitperiod},
+           given={Babak},
+           giveni={B\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=63db21b1dd89fc12aac7791967820b87}{%
+           family={Bäck},
+           familyi={B\bibinitperiod},
+           given={Thomas},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=c8cf19241225247d6d07dbf8a516b8ed}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Hao},
+           giveni={H\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{fda457abc124eb62a840eefe0b18e4be}
+      \strng{fullhash}{808c48d0e04950b082f16b51b7212f9f}
+      \strng{fullhashraw}{808c48d0e04950b082f16b51b7212f9f}
+      \strng{bibnamehash}{fda457abc124eb62a840eefe0b18e4be}
+      \strng{authorbibnamehash}{fda457abc124eb62a840eefe0b18e4be}
+      \strng{authornamehash}{fda457abc124eb62a840eefe0b18e4be}
+      \strng{authorfullhash}{808c48d0e04950b082f16b51b7212f9f}
+      \strng{authorfullhashraw}{808c48d0e04950b082f16b51b7212f9f}
+      \field{labelalpha}{Fan+24}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.CV}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{arXiv preprint}
+      \field{title}{NeuroNURBS: Learning Efficient Surface Representations for 3D Solids}
+      \field{year}{2024}
+      \verb{eprint}
+      \verb 2411.10848
+      \endverb
+    \endentry
+    \entry{Hu2021lora}{article}{}{}
+      \name{author}{8}{}{%
+        {{un=0,uniquepart=base,hash=8926b123361e30f072aa0fdaefb12274}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Edward\bibnamedelima X.},
+           giveni={E\bibinitperiod\bibinitdelim X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=1701c0f05662e92cf52cfc8c16437496}{%
+           family={Shen},
+           familyi={S\bibinitperiod},
+           given={Yelong},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=918340f9ddeeea243498770ebad5c22b}{%
+           family={Wallis},
+           familyi={W\bibinitperiod},
+           given={Phil},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=eaa5cc98b7f19b4ce07c832213a13b9d}{%
+           family={Allen-Zhu},
+           familyi={A\bibinithyphendelim Z\bibinitperiod},
+           given={Zeyuan},
+           giveni={Z\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=0d2c91b24f885b22d373a892a768abc8}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Yuanzhi},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=b654b88ecd4c3ff1ea29da275bce701c}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Shean},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=55f210233ac686af68eba11a97bd84e2}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Lu},
+           giveni={L\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=05d71a9c5e7ac79222e01a55af0ccb93}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Weizhu},
+           giveni={W\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{ca8954b89afc22c801f4ddf242a8cca6}
+      \strng{fullhash}{053ce8077d1c73651b8e7bf5ab1c7540}
+      \strng{fullhashraw}{053ce8077d1c73651b8e7bf5ab1c7540}
+      \strng{bibnamehash}{ca8954b89afc22c801f4ddf242a8cca6}
+      \strng{authorbibnamehash}{ca8954b89afc22c801f4ddf242a8cca6}
+      \strng{authornamehash}{ca8954b89afc22c801f4ddf242a8cca6}
+      \strng{authorfullhash}{053ce8077d1c73651b8e7bf5ab1c7540}
+      \strng{authorfullhashraw}{053ce8077d1c73651b8e7bf5ab1c7540}
+      \field{labelalpha}{Hu+21}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.CL}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{arXiv preprint}
+      \field{title}{LoRA: Low-Rank Adaptation of Large Language Models}
+      \field{year}{2021}
+      \verb{eprint}
+      \verb 2106.09685
+      \endverb
+    \endentry
+    \entry{Liu2025hola}{article}{}{}
+      \name{author}{7}{}{%
+        {{un=0,uniquepart=base,hash=5868f21241a1987f83210b0195d0e4ba}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Yilin},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=43859928d666f9fc13c3e8c92fbd0c6b}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Duoteng},
+           giveni={D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=7c24104f3d3ec771ae7b386f16734821}{%
+           family={Yu},
+           familyi={Y\bibinitperiod},
+           given={Xingyao},
+           giveni={X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d162783186e7a7e50ee078038ff292d0}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Xiang},
+           giveni={X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=cdf44d78713bc27a81394749a9d8bbdc}{%
+           family={Cohen-Or},
+           familyi={C\bibinithyphendelim O\bibinitperiod},
+           given={Daniel},
+           giveni={D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=8c6d18e2d167e1a3dc88c0166bbc3471}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Hao},
+           giveni={H\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=fe5bbc2af496a36d47c902f7a66797e9}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Hui},
+           giveni={H\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{08c6777349e639156dfb5e8ccbedc532}
+      \strng{fullhash}{a45f67a1b81a4b564b86057db2f620c9}
+      \strng{fullhashraw}{a45f67a1b81a4b564b86057db2f620c9}
+      \strng{bibnamehash}{08c6777349e639156dfb5e8ccbedc532}
+      \strng{authorbibnamehash}{08c6777349e639156dfb5e8ccbedc532}
+      \strng{authornamehash}{08c6777349e639156dfb5e8ccbedc532}
+      \strng{authorfullhash}{a45f67a1b81a4b564b86057db2f620c9}
+      \strng{authorfullhashraw}{a45f67a1b81a4b564b86057db2f620c9}
+      \field{labelalpha}{Liu+25}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.GR}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{ACM Transactions on Graphics (TOG)}
+      \field{number}{4}
+      \field{title}{HoLa: B-Rep Generation using a Holistic Latent Representation}
+      \field{volume}{44}
+      \field{year}{2025}
+      \verb{doi}
+      \verb 10.1145/3730842
+      \endverb
+      \verb{eprint}
+      \verb 2504.14257
+      \endverb
+    \endentry
+    \entry{UnSloth2024lora}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=5264824a9d8ef73b09af106822378515}{%
+           family={UnSloth},
+           familyi={U\bibinitperiod}}}%
+      }
+      \strng{namehash}{5264824a9d8ef73b09af106822378515}
+      \strng{fullhash}{5264824a9d8ef73b09af106822378515}
+      \strng{fullhashraw}{5264824a9d8ef73b09af106822378515}
+      \strng{bibnamehash}{5264824a9d8ef73b09af106822378515}
+      \strng{authorbibnamehash}{5264824a9d8ef73b09af106822378515}
+      \strng{authornamehash}{5264824a9d8ef73b09af106822378515}
+      \strng{authorfullhash}{5264824a9d8ef73b09af106822378515}
+      \strng{authorfullhashraw}{5264824a9d8ef73b09af106822378515}
+      \field{labelalpha}{UnS24}
+      \field{sortinit}{U}
+      \field{sortinithash}{6901a00e45705986ee5e7ca9fd39adca}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{\url{https://www.unsloth.ai/docs/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide}}
+      \field{note}{Accessed: April 2026}
+      \field{title}{LoRA Hyperparameters Guide}
+      \field{year}{2024}
+    \endentry
+    \entry{Xu2024brepgen}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{un=0,uniquepart=base,hash=d162783186e7a7e50ee078038ff292d0}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Xiang},
+           giveni={X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2e56e4a6ef565d6af24d32895de9bd46}{%
+           family={Lambourne},
+           familyi={L\bibinitperiod},
+           given={Joseph\bibnamedelima G.},
+           giveni={J\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=8f0624b3b846146b8b1323f183117250}{%
+           family={Jayaraman},
+           familyi={J\bibinitperiod},
+           given={Pradeep\bibnamedelima Kumar},
+           giveni={P\bibinitperiod\bibinitdelim K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=6f5140661e07e172c6829e0fd64c960b}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Zhengqing},
+           giveni={Z\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=413888356506074bffe063579b173838}{%
+           family={Willis},
+           familyi={W\bibinitperiod},
+           given={Karl\bibnamedelimb D.\bibnamedelimi D.},
+           giveni={K\bibinitperiod\bibinitdelim D\bibinitperiod\bibinitdelim D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=352b1ed7e14d74b1f159928c01ed9078}{%
+           family={Furukawa},
+           familyi={F\bibinitperiod},
+           given={Yasutaka},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{fullhash}{8238f19fb10a4ca13a39ea4663433691}
+      \strng{fullhashraw}{8238f19fb10a4ca13a39ea4663433691}
+      \strng{bibnamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authorbibnamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authornamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authorfullhash}{8238f19fb10a4ca13a39ea4663433691}
+      \strng{authorfullhashraw}{8238f19fb10a4ca13a39ea4663433691}
+      \field{extraname}{1}
+      \field{labelalpha}{Xu+24}
+      \field{sortinit}{X}
+      \field{sortinithash}{1965c258adceecf23ce3d67b05113442}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{ACM SIGGRAPH 2024 Conference Papers}
+      \field{eprintclass}{cs.CV}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{ACM Transactions on Graphics (TOG)}
+      \field{number}{4}
+      \field{title}{BrepGen: A B-rep Generative Diffusion Model with Structured Latent Geometry}
+      \field{volume}{43}
+      \field{year}{2024}
+      \field{pages}{119:1\bibrangedash 119:18}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1145/3658129
+      \endverb
+      \verb{eprint}
+      \verb 2401.15563
+      \endverb
+    \endentry
+    \entry{Xu2025autobrep}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{un=0,uniquepart=base,hash=d162783186e7a7e50ee078038ff292d0}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Xiang},
+           giveni={X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=8f0624b3b846146b8b1323f183117250}{%
+           family={Jayaraman},
+           familyi={J\bibinitperiod},
+           given={Pradeep\bibnamedelima Kumar},
+           giveni={P\bibinitperiod\bibinitdelim K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2e56e4a6ef565d6af24d32895de9bd46}{%
+           family={Lambourne},
+           familyi={L\bibinitperiod},
+           given={Joseph\bibnamedelima G.},
+           giveni={J\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=5868f21241a1987f83210b0195d0e4ba}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Yilin},
+           giveni={Y\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=6a39ca6c18903bbf4062863e0d761fa6}{%
+           family={Malpure},
+           familyi={M\bibinitperiod},
+           given={Durvesh},
+           giveni={D\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=be4fa227011a5ee2ccefa1e7ce0efb35}{%
+           family={Meltzer},
+           familyi={M\bibinitperiod},
+           given={Pete},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{fullhash}{d58316c03650aaa298e6a6a77b485b1f}
+      \strng{fullhashraw}{d58316c03650aaa298e6a6a77b485b1f}
+      \strng{bibnamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authorbibnamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authornamehash}{5e5fe89ab46fcd6ac215c0053da47557}
+      \strng{authorfullhash}{d58316c03650aaa298e6a6a77b485b1f}
+      \strng{authorfullhashraw}{d58316c03650aaa298e6a6a77b485b1f}
+      \field{extraname}{2}
+      \field{labelalpha}{Xu+25}
+      \field{sortinit}{X}
+      \field{sortinithash}{1965c258adceecf23ce3d67b05113442}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{SIGGRAPH Asia 2025 Conference Papers}
+      \field{eprintclass}{cs.CV}
+      \field{eprinttype}{arXiv}
+      \field{title}{AutoBrep: Autoregressive B-Rep Generation with Unified Topology and Geometry}
+      \field{year}{2025}
+      \verb{doi}
+      \verb 10.1145/3757377.3763814
+      \endverb
+      \verb{eprint}
+      \verb 2512.03018
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

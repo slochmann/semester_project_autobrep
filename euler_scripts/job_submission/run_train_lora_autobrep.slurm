@@ -64,11 +64,6 @@ export WANDB_PROJECT="autobrep"
 export WANDB_ENTITY="slochmann-ethz"
 
 #------------------------------------------------------------------------------
-# Set Hugging Face environment variables
-#------------------------------------------------------------------------------
-export HF_TOKEN="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"
-
-#------------------------------------------------------------------------------
 # Paths
 #------------------------------------------------------------------------------
 AUTOBREP_DIR="$SCRATCH/AutoBrep"

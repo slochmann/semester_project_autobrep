@@ -7,7 +7,7 @@
 
 This thesis is conducted at the IDEAL lab in collaboration with Manukai AG, an ETH spinoff developing machine learning models for CAM manufacturing. Manukai faces a critical challenge: they need domain-specific synthetic CAD training data to fine-tune their models, but cannot mix customers' proprietary CAD datasets in their model between companies due to trade secret concerns. Generating high-quality, domain-specific data is therefore essential.
 
-Recently, the state-of-the-art AutoBrep model \cite{Xu2025autobrep} demonstrated superior capabilities in generating Boundary Representations (B-Reps) with higher quality and complexity compared to prior approaches like BrepGen \cite{Xu2024brepgen}. However, directly applying pre-trained generative models to new specialized domains requires either full retraining (computationally expensive and data-intensive) or efficient adaptation techniques. This motivates investigating parameter-efficient fine-tuning using Low-Rank Adaptation (LoRA) to enable rapid domain adaptation with limited data.
+Recently, the state-of-the-art AutoBrep model \cite{Xu2025autobrep} demonstrated superior capabilities in generating Boundary Representations (B-Reps) with higher quality and complexity compared to prior approaches like BrepGen \cite{Xu2024brepgen}. However, directly applying pre-trained generative models to new specialized domains requires either full retraining (computationally expensive and data-intensive) or efficient adaptation techniques. This motivates investigating parameter-efficient fine-tuning using Low-Rank Adaptation (LoRA) to enable rapid domain adaptation with limited data and compute.
 
 
 %===============================================================
@@ -32,15 +32,13 @@ This work addresses these challenges by investigating \textit{parameter-efficien
 
 \par
 
-\textbf{``Can large pre-trained generative CAD models like AutoBrep from \cite{Xu2025autobrep} be efficiently adapted to specialized design domains with limited data using Low Rank Adaptation?''}
-
-To answer this, we:
 \begin{enumerate}
-    \item Implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model
-    \item Demonstrate domain-specific adaptation on custom CAD datasets
-    \item Analyze scalability of multiple LoRA adapters for different domains
-    \item Evaluate practical utility and limitations of the approach
+    \item What are the \textbf{capabilities and limitations} for the AutoBrep CAD GPT model published by \cite{Xu2025autobrep}?
+    \item Can the model be efficiently \textbf{adapted to specialized design domains} with limited data?
+    \item Does the model allow for sequential or sparse \textbf{(auto)completion} of solids?
 \end{enumerate}
+
+To answer this, we implement a complete pipeline for LoRA-based fine-tuning of the AutoBrep model, deploy it on Euler GPU's, explore hyperparameters, tracking with W\&B. Additionally, we try out (auto)completion. Eventually we evaluate our results.
 
 %===============================================================
 \subsection{Contributions}
@@ -53,9 +51,9 @@ This thesis makes the following contributions to the field of generative design 
 \begin{enumerate}
     \item \textbf{Practical Framework}: An end-to-end implementation of LoRA fine-tuning for AutoBrep, including data preprocessing, training, and inference pipelines
 
-    \item \textbf{Efficiency Analysis}: Empirical demonstration whether domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters and order of 500 samples, enabling fine-tuning with very limited data and without changing the base model's parameters
+    \item \textbf{Viability Analysis}: Empirical demonstration whether domain-specific performance can be achieved with only $\approx$1\% additional trainable parameters and order of 500 samples, enabling fine-tuning with very limited data and without changing the base model's parameters
 
-    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, training curves and experimental procedures enabling future research and practical adoption
+    \item \textbf{Reproducibility}: Detailed documentation of hyperparameters, code, training curves and experimental procedures enabling future research and practical adoption. All code is available at \url{https://github.com/slochmann/semester_project_autobrep}.
 \end{enumerate}
 
 %===============================================================

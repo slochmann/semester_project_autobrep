@@ -17,7 +17,6 @@ CONDA_DIR="$HOME/miniconda3"
 source "$CONDA_DIR/etc/profile.d/conda.sh"
 conda activate autobrep
 
-export HF_TOKEN="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"
 CKPT_DIR="$SCRATCH/AutoBrep/checkpoints"
 mkdir -p "$CKPT_DIR"
 

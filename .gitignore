@@ -13,6 +13,7 @@ parquet_samples
 preprocessed_images
 model
 local_LoRA_tests
+step_samples_finetuned
 
 ## Latex
 # Ignore ALL compiled files and artifacts
@@ -29,7 +30,6 @@ report/*.toc
 report/*.lof
 report/*.lot
 report/*.run.xml
-report/MAIN.pdf
 report/**/*.aux
 
 weekly_status
