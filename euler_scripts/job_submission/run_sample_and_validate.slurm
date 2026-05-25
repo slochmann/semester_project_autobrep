@@ -11,17 +11,19 @@
 #==============================================================================
 # CONFIGURATION
 #==============================================================================
-SAMPLE_BATCH_SIZE=4
-TEMPERATURE=0.7
+# Defaults follow the AutoBrep repo's configs/sample.json
+TEMPERATURE=1.0
 TOP_P=0.9
-COMPLEXITY=17                              # 14=easy, 15=medium, 16=hard, 17=random
-PREFIX_RATIO=0.5
-HF_SPLIT="validation"
+COMPLEXITY=16                              # 14=easy, 15=medium, 16=hard, 17=random
+NUM_TRAIN_SAMPLES=8                        # samples drawn from HF train split
+NUM_VAL_SAMPLES=8                          # samples drawn from HF validation split
 HF_SAMPLE_SKIP=0
-SEED=42
+PREFIX_RATIO=0.5
+NUM_COMPLETIONS=4                          # independent completions per prefix
+SEED=$(date +%s)    # per-submission seed (use SLURM job id, else $RANDOM)
 VERTEX_THRESHOLD=0.002
 SEWING_TOLERANCE=0.002
-Z_THRESHOLD=0.002
+Z_THRESHOLD=0
 #==============================================================================
 
 mkdir -p "$SCRATCH/logs"
@@ -63,13 +65,14 @@ echo "Starting sample + validate run..."
 "$PYTHON" "$SCRIPT_PATH" \
     --ckpt_dir "$CKPT_DIR" \
     --output_dir "$OUTPUT_DIR" \
-    --hf_split "$HF_SPLIT" \
+    --num_train_samples $NUM_TRAIN_SAMPLES \
+    --num_val_samples $NUM_VAL_SAMPLES \
     --hf_sample_skip $HF_SAMPLE_SKIP \
-    --sample_batch_size $SAMPLE_BATCH_SIZE \
     --sample_temperature $TEMPERATURE \
     --sample_threshold $TOP_P \
     --sample_complexity $COMPLEXITY \
     --prefix_ratio $PREFIX_RATIO \
+    --num_completions $NUM_COMPLETIONS \
     --z_threshold $Z_THRESHOLD \
     --vertex_threshold $VERTEX_THRESHOLD \
     --sewing_tolerance $SEWING_TOLERANCE \
