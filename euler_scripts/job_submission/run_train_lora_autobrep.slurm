@@ -59,7 +59,6 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 #------------------------------------------------------------------------------
 # Set WANDB environment variables
 #------------------------------------------------------------------------------
-export WANDB_API_KEY="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"
 export WANDB_PROJECT="autobrep"
 export WANDB_ENTITY="slochmann-ethz"
 
