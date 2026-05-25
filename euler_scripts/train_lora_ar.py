@@ -96,6 +96,12 @@ def parse_args():
         help="Interval (in epochs) to run inference sampling",
     )
     parser.add_argument(
+        "--sample_only_last_n_epochs",
+        type=int,
+        default=0,
+        help="Only sample during the last N epochs (0=disabled, use sample_interval_epochs instead)",
+    )
+    parser.add_argument(
         "--sample_interval_batches",
         type=int,
         default=0,
@@ -667,7 +673,16 @@ def train_lora(
         model.cad_gpt.train()
 
         # Periodic inference sampling at epoch intervals
-        if args is not None and (epoch + 1) % args.sample_interval_epochs == 0:
+        should_sample = False
+        if args is not None:
+            if args.sample_only_last_n_epochs > 0:
+                # Sample only in the last N epochs
+                should_sample = epoch >= (num_epochs - args.sample_only_last_n_epochs)
+            else:
+                # Use interval-based sampling
+                should_sample = (epoch + 1) % args.sample_interval_epochs == 0
+        
+        if should_sample:
             sample_during_training(
                 model=model,
                 device=device,
